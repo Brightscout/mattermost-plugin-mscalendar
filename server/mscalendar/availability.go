@@ -5,8 +5,9 @@ package mscalendar
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-server/v5/model"
 
