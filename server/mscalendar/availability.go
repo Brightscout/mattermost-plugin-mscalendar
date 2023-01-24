@@ -67,6 +67,7 @@ func (m *mscalendar) syncUsers(userIndex store.UserIndex) (string, error) {
 		// TODO fetch users from kvstore in batches, and process in batches instead of all at once
 		user, err := m.Store.LoadUser(u.MattermostUserID)
 		if err != nil {
+			// Skip in case of error loading the user
 			m.Logger.Errorf("Not able to load user %s from user index. err=%v", u.MattermostUserID, err)
 			continue
 		}
