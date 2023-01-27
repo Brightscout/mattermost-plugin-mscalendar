@@ -23,7 +23,8 @@ const (
 	StatusSyncJobInterval           = 5 * time.Minute
 	upcomingEventNotificationTime   = 10 * time.Minute
 	upcomingEventNotificationWindow = (StatusSyncJobInterval * 11) / 10 // 110% of the interval
-	logTrucationMsg                 = "We've truncated the logs due to too many messages"
+	logTrucateMsg                   = "We've truncated the logs due to too many messages"
+	logTrucateLimit                 = 5
 )
 
 type Availability interface {
@@ -70,10 +71,10 @@ func (m *mscalendar) syncUsers(userIndex store.UserIndex) (string, error) {
 		// TODO fetch users from kvstore in batches, and process in batches instead of all at once
 		user, err := m.Store.LoadUser(u.MattermostUserID)
 		if err != nil {
-			if numberOfLogs < 5 {
+			if numberOfLogs < logTrucateLimit {
 				m.Logger.Errorf("Not able to load user %s from user index. err=%v", u.MattermostUserID, err)
-			} else if numberOfLogs == 5 {
-				m.Logger.Warnf(logTrucationMsg)
+			} else if numberOfLogs == logTrucateLimit {
+				m.Logger.Warnf(logTrucateMsg)
 			}
 			numberOfLogs++
 
@@ -128,10 +129,10 @@ func (m *mscalendar) deliverReminders(users []*store.User, calendarViews []*remo
 			continue
 		}
 		if view.Error != nil {
-			if numberOfLogs < 5 {
+			if numberOfLogs < logTrucateLimit {
 				m.Logger.Warnf("Error getting availability for %s. err=%s", user.Remote.Mail, view.Error.Message)
-			} else if numberOfLogs == 5 {
-				m.Logger.Warnf(logTrucationMsg)
+			} else if numberOfLogs == logTrucateLimit {
+				m.Logger.Warnf(logTrucateMsg)
 			}
 			numberOfLogs++
 			continue
@@ -177,10 +178,10 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 			continue
 		}
 		if view.Error != nil {
-			if numberOfLogs < 5 {
+			if numberOfLogs < logTrucateLimit {
 				m.Logger.Warnf("Error getting availability for %s. err=%s", user.Remote.Mail, view.Error.Message)
-			} else if numberOfLogs == 5 {
-				m.Logger.Warnf(logTrucationMsg)
+			} else if numberOfLogs == logTrucateLimit {
+				m.Logger.Warnf(logTrucateMsg)
 			}
 			numberOfLogs++
 			continue
@@ -195,10 +196,10 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 		var err error
 		res, err = m.setStatusFromCalendarView(user, status, view, numberOfLogs)
 		if err != nil {
-			if numberOfLogs < 5 {
+			if numberOfLogs < logTrucateLimit {
 				m.Logger.Warnf("Error setting user %s status. err=%v", user.Remote.Mail, err)
-			} else if numberOfLogs == 5 {
-				m.Logger.Warnf(logTrucationMsg)
+			} else if numberOfLogs == logTrucateLimit {
+				m.Logger.Warnf(logTrucateMsg)
 			}
 		}
 		numberOfLogs++
@@ -211,10 +212,10 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 }
 
 func (m *mscalendar) setStatusFromCalendarView(user *store.User, status *model.Status, res *remote.ViewCalendarResponse, numberOfLogs int) (string, error) {
-	if numberOfLogs < 5 {
+	if numberOfLogs < logTrucateLimit {
 		m.Logger.Debugf("Setting user status for user %s", user.MattermostUserID)
-	} else if numberOfLogs == 5 {
-		m.Logger.Warnf(logTrucationMsg)
+	} else if numberOfLogs == logTrucateLimit {
+		m.Logger.Warnf(logTrucateMsg)
 	}
 	currentStatus := status.Status
 	if currentStatus == model.STATUS_OFFLINE && !user.Settings.GetConfirmation {
