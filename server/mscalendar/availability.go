@@ -23,6 +23,7 @@ const (
 	StatusSyncJobInterval           = 5 * time.Minute
 	upcomingEventNotificationTime   = 10 * time.Minute
 	upcomingEventNotificationWindow = (StatusSyncJobInterval * 11) / 10 // 110% of the interval
+	logTrucationMsg                 = "We've truncated the logs due to too many messages"
 )
 
 type Availability interface {
@@ -63,13 +64,20 @@ func (m *mscalendar) syncUsers(userIndex store.UserIndex) (string, error) {
 		return "No connected users found", nil
 	}
 
+	numberOfLogs := 0
 	users := []*store.User{}
 	for _, u := range userIndex {
 		// TODO fetch users from kvstore in batches, and process in batches instead of all at once
 		user, err := m.Store.LoadUser(u.MattermostUserID)
 		if err != nil {
+			if numberOfLogs < 5 {
+				m.Logger.Errorf("Not able to load user %s from user index. err=%v", u.MattermostUserID, err)
+			} else if numberOfLogs == 5 {
+				m.Logger.Warnf(logTrucationMsg)
+			}
+			numberOfLogs++
+
 			// Skip in case of error loading the user
-			m.Logger.Errorf("Not able to load user %s from user index. err=%v", u.MattermostUserID, err)
 			continue
 		}
 		if user.Settings.UpdateStatus || user.Settings.ReceiveReminders {
@@ -98,6 +106,7 @@ func (m *mscalendar) syncUsers(userIndex store.UserIndex) (string, error) {
 }
 
 func (m *mscalendar) deliverReminders(users []*store.User, calendarViews []*remote.ViewCalendarResponse) {
+	numberOfLogs := 0
 	toNotify := []*store.User{}
 	for _, u := range users {
 		if u.Settings.ReceiveReminders {
@@ -119,7 +128,12 @@ func (m *mscalendar) deliverReminders(users []*store.User, calendarViews []*remo
 			continue
 		}
 		if view.Error != nil {
-			m.Logger.Warnf("Error getting availability for %s. err=%s", user.Remote.Mail, view.Error.Message)
+			if numberOfLogs < 5 {
+				m.Logger.Warnf("Error getting availability for %s. err=%s", user.Remote.Mail, view.Error.Message)
+			} else if numberOfLogs == 5 {
+				m.Logger.Warnf(logTrucationMsg)
+			}
+			numberOfLogs++
 			continue
 		}
 
@@ -129,6 +143,7 @@ func (m *mscalendar) deliverReminders(users []*store.User, calendarViews []*remo
 }
 
 func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remote.ViewCalendarResponse) (string, error) {
+	numberOfLogs := 0
 	toUpdate := []*store.User{}
 	for _, u := range users {
 		if u.Settings.UpdateStatus {
@@ -162,7 +177,12 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 			continue
 		}
 		if view.Error != nil {
-			m.Logger.Warnf("Error getting availability for %s. err=%s", user.Remote.Mail, view.Error.Message)
+			if numberOfLogs < 5 {
+				m.Logger.Warnf("Error getting availability for %s. err=%s", user.Remote.Mail, view.Error.Message)
+			} else if numberOfLogs == 5 {
+				m.Logger.Warnf(logTrucationMsg)
+			}
+			numberOfLogs++
 			continue
 		}
 
@@ -173,10 +193,15 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 		}
 
 		var err error
-		res, err = m.setStatusFromCalendarView(user, status, view)
+		res, err = m.setStatusFromCalendarView(user, status, view, numberOfLogs)
 		if err != nil {
-			m.Logger.Warnf("Error setting user %s status. err=%v", user.Remote.Mail, err)
+			if numberOfLogs < 5 {
+				m.Logger.Warnf("Error setting user %s status. err=%v", user.Remote.Mail, err)
+			} else if numberOfLogs == 5 {
+				m.Logger.Warnf(logTrucationMsg)
+			}
 		}
+		numberOfLogs++
 	}
 	if res != "" {
 		return res, nil
@@ -185,8 +210,12 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 	return utils.JSONBlock(calendarViews), nil
 }
 
-func (m *mscalendar) setStatusFromCalendarView(user *store.User, status *model.Status, res *remote.ViewCalendarResponse) (string, error) {
-	m.Logger.Debugf("Setting user status for user %s", user.MattermostUserID)
+func (m *mscalendar) setStatusFromCalendarView(user *store.User, status *model.Status, res *remote.ViewCalendarResponse, numberOfLogs int) (string, error) {
+	if numberOfLogs < 5 {
+		m.Logger.Debugf("Setting user status for user %s", user.MattermostUserID)
+	} else if numberOfLogs == 5 {
+		m.Logger.Warnf(logTrucationMsg)
+	}
 	currentStatus := status.Status
 	if currentStatus == model.STATUS_OFFLINE && !user.Settings.GetConfirmation {
 		return "User offline and does not want status change confirmations. No status change", nil
