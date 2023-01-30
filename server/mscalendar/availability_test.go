@@ -158,7 +158,6 @@ func TestSyncStatusAll(t *testing.T) {
 			if tc.shouldLogError {
 				logger.EXPECT().Warnf("Error getting availability for %s. err=%s", "user_email@example.com", tc.apiError.Message).Times(1)
 			} else {
-				logger.EXPECT().Debugf("Setting user status for user %s", "user_mm_id")
 				logger.EXPECT().Warnf(gomock.Any()).Times(0)
 			}
 
@@ -203,8 +202,6 @@ func TestSyncStatusUserConfig(t *testing.T) {
 					{Events: []*remote.Event{busyEvent}, RemoteUserID: "user_remote_id"},
 				}, nil)
 				papi.EXPECT().GetMattermostUserStatusesByIds([]string{"user_mm_id"}).Return([]*model.Status{{Status: "online", Manual: true, UserId: "user_mm_id"}}, nil)
-
-				mockLogger.EXPECT().Debugf("Setting user status for user %s", "user_mm_id")
 
 				s.EXPECT().StoreUser(gomock.Any()).Return(nil).Times(1)
 				s.EXPECT().StoreUserActiveEvents("user_mm_id", []string{"event_id " + moment.Format(time.RFC3339)})
