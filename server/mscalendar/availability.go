@@ -234,13 +234,13 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, status *model.S
 			}
 			err := m.setStatusOrAskUser(user, status, events, true)
 			if err != nil {
-				return "", errors.Wrap(err, fmt.Sprintf("error in setting user status for user %s", user.MattermostUserID))
+				return "", errors.Wrapf(err, "error in setting user status for user %s", user.MattermostUserID)
 			}
 		}
 
 		err := m.Store.StoreUserActiveEvents(user.MattermostUserID, []string{})
 		if err != nil {
-			return "", errors.Wrap(err, fmt.Sprintf("error in storing active events for user %s", user.MattermostUserID))
+			return "", errors.Wrapf(err, "error in storing active events for user %s", user.MattermostUserID)
 		}
 		return message, nil
 	}
@@ -264,17 +264,17 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, status *model.S
 			m.Store.StoreUser(user)
 			err = m.Store.StoreUserActiveEvents(user.MattermostUserID, remoteHashes)
 			if err != nil {
-				return "", errors.Wrap(err, fmt.Sprintf("error in storing active events for user %s", user.MattermostUserID))
+				return "", errors.Wrapf(err, "error in storing active events for user %s", user.MattermostUserID)
 			}
 			return "User was already marked as busy. No status change.", nil
 		}
 		err = m.setStatusOrAskUser(user, status, events, false)
 		if err != nil {
-			return "", errors.Wrap(err, fmt.Sprintf("error in setting user status for user %s", user.MattermostUserID))
+			return "", errors.Wrapf(err, "error in setting user status for user %s", user.MattermostUserID)
 		}
 		err = m.Store.StoreUserActiveEvents(user.MattermostUserID, remoteHashes)
 		if err != nil {
-			return "", errors.Wrap(err, fmt.Sprintf("error in storing active events for user %s", user.MattermostUserID))
+			return "", errors.Wrapf(err, "error in storing active events for user %s", user.MattermostUserID)
 		}
 		return fmt.Sprintf("User was free, but is now busy (%s). Set status to busy.", busyStatus), nil
 	}
@@ -302,14 +302,14 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, status *model.S
 	if currentStatus != busyStatus {
 		err := m.setStatusOrAskUser(user, status, events, false)
 		if err != nil {
-			return "", errors.Wrap(err, fmt.Sprintf("error in setting user status for user %s", user.MattermostUserID))
+			return "", errors.Wrapf(err, "error in setting user status for user %s", user.MattermostUserID)
 		}
 		message = fmt.Sprintf("User was free, but is now busy. Set status to busy (%s).", busyStatus)
 	}
 
 	err := m.Store.StoreUserActiveEvents(user.MattermostUserID, remoteHashes)
 	if err != nil {
-		return "", errors.Wrap(err, fmt.Sprintf("error in storing active events for user %s", user.MattermostUserID))
+		return "", errors.Wrapf(err, "error in storing active events for user %s", user.MattermostUserID)
 	}
 
 	return message, nil
