@@ -161,7 +161,7 @@ func TestSyncStatusAll(t *testing.T) {
 			}
 
 			m := New(env, "")
-			res, err := m.SyncAll()
+			res, _, err := m.SyncAll()
 			require.Nil(t, err)
 			require.NotEmpty(t, res)
 		})
@@ -223,7 +223,7 @@ func TestSyncStatusUserConfig(t *testing.T) {
 			tc.runAssertions(env.Dependencies, client)
 
 			mscalendar := New(env, "")
-			_, err := mscalendar.SyncAll()
+			_, _, err := mscalendar.SyncAll()
 			require.Nil(t, err)
 		})
 	}
@@ -321,7 +321,7 @@ func TestReminders(t *testing.T) {
 			}
 
 			m := New(env, "")
-			res, err := m.SyncAll()
+			res, _, err := m.SyncAll()
 			require.Nil(t, err)
 			require.NotEmpty(t, res)
 		})
