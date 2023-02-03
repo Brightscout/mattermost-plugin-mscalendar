@@ -27,9 +27,9 @@ const (
 )
 
 type StatusSyncJobSummary struct {
-	NumberOfUserErrorInStatusChange int
-	NumberOfUserStatusChange        int
-	NumberOfUserProcessed           int
+	NumberOfUserErrorsInStatusChange int
+	NumberOfUsersStatusChange        int
+	NumberOfUsersProcessed           int
 }
 
 type Availability interface {
@@ -58,7 +58,7 @@ func (m *mscalendar) SyncAll() (string, *StatusSyncJobSummary, error) {
 		if err.Error() == "not found" {
 			return "No users found in user index", nil, nil
 		}
-		return "", nil, errors.Wrap(err, "not able to load users from user index.")
+		return "", nil, errors.Wrap(err, "not able to load the users from user index.")
 	}
 
 	return m.syncUsers(userIndex)
@@ -69,7 +69,7 @@ func (m *mscalendar) syncUsers(userIndex store.UserIndex) (string, *StatusSyncJo
 	if len(userIndex) == 0 {
 		return "No connected users found", summarySyncJob, nil
 	}
-	summarySyncJob.NumberOfUserProcessed = len(userIndex)
+	summarySyncJob.NumberOfUsersProcessed = len(userIndex)
 
 	numberOfLogs := 0
 	users := []*store.User{}
@@ -104,13 +104,13 @@ func (m *mscalendar) syncUsers(userIndex store.UserIndex) (string, *StatusSyncJo
 	}
 
 	m.deliverReminders(users, calendarViews)
-	out, numberOfUserStatusChange, numberOfUserErrorInStatusChange, err := m.setUserStatuses(users, calendarViews)
+	out, numberOfUsersStatusChange, numberOfUserErrorsInStatusChange, err := m.setUserStatuses(users, calendarViews)
 	if err != nil {
 		return "", summarySyncJob, errors.Wrap(err, "error setting the user statuses.")
 	}
 
-	summarySyncJob.NumberOfUserErrorInStatusChange = numberOfUserErrorInStatusChange
-	summarySyncJob.NumberOfUserStatusChange = numberOfUserStatusChange
+	summarySyncJob.NumberOfUserErrorsInStatusChange = numberOfUserErrorsInStatusChange
+	summarySyncJob.NumberOfUsersStatusChange = numberOfUsersStatusChange
 
 	return out, summarySyncJob, nil
 }
