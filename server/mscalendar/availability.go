@@ -65,11 +65,11 @@ func (m *mscalendar) SyncAll() (string, *StatusSyncJobSummary, error) {
 }
 
 func (m *mscalendar) syncUsers(userIndex store.UserIndex) (string, *StatusSyncJobSummary, error) {
-	syncJobsummary := &StatusSyncJobSummary{}
+	syncJobSummary := &StatusSyncJobSummary{}
 	if len(userIndex) == 0 {
-		return "No connected users found", syncJobsummary, nil
+		return "No connected users found", syncJobSummary, nil
 	}
-	syncJobsummary.NumberOfUsersProcessed = len(userIndex)
+	syncJobSummary.NumberOfUsersProcessed = len(userIndex)
 
 	numberOfLogs := 0
 	users := []*store.User{}
@@ -92,27 +92,27 @@ func (m *mscalendar) syncUsers(userIndex store.UserIndex) (string, *StatusSyncJo
 		}
 	}
 	if len(users) == 0 {
-		return "No users need to be synced", syncJobsummary, nil
+		return "No users need to be synced", syncJobSummary, nil
 	}
 
 	calendarViews, err := m.GetCalendarViews(users)
 	if err != nil {
-		return "", syncJobsummary, errors.Wrap(err, "not able to get calendar views for connected users.")
+		return "", syncJobSummary, errors.Wrap(err, "not able to get calendar views for connected users.")
 	}
 	if len(calendarViews) == 0 {
-		return "No calendar views found", syncJobsummary, nil
+		return "No calendar views found", syncJobSummary, nil
 	}
 
 	m.deliverReminders(users, calendarViews)
 	out, numberOfUsersStatusChanged, numberOfUsersFailedStatusChanged, err := m.setUserStatuses(users, calendarViews)
 	if err != nil {
-		return "", syncJobsummary, errors.Wrap(err, "error setting the user statuses.")
+		return "", syncJobSummary, errors.Wrap(err, "error setting the user statuses.")
 	}
 
-	syncJobsummary.NumberOfUsersFailedStatusChanged = numberOfUsersFailedStatusChanged
-	syncJobsummary.NumberOfUsersStatusChanged = numberOfUsersStatusChanged
+	syncJobSummary.NumberOfUsersFailedStatusChanged = numberOfUsersFailedStatusChanged
+	syncJobSummary.NumberOfUsersStatusChanged = numberOfUsersStatusChanged
 
-	return out, syncJobsummary, nil
+	return out, syncJobSummary, nil
 }
 
 func (m *mscalendar) deliverReminders(users []*store.User, calendarViews []*remote.ViewCalendarResponse) {
@@ -227,10 +227,10 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 }
 
 func (m *mscalendar) setStatusFromCalendarView(user *store.User, status *model.Status, res *remote.ViewCalendarResponse) (string, bool, error) {
-	isStatusChange := false
+	isStatusChanged := false
 	currentStatus := status.Status
 	if currentStatus == model.STATUS_OFFLINE && !user.Settings.GetConfirmation {
-		return "User offline and does not want status change confirmations. No status change", isStatusChange, nil
+		return "User offline and does not want status change confirmations. No status change", isStatusChanged, nil
 	}
 
 	events := filterBusyEvents(res.Events)
@@ -240,7 +240,7 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, status *model.S
 	}
 
 	if len(user.ActiveEvents) == 0 && len(events) == 0 {
-		return "No events in local or remote. No status change.", isStatusChange, nil
+		return "No events in local or remote. No status change.", isStatusChanged, nil
 	}
 
 	if len(user.ActiveEvents) > 0 && len(events) == 0 {
@@ -252,16 +252,16 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, status *model.S
 			}
 			err := m.setStatusOrAskUser(user, status, events, true)
 			if err != nil {
-				return "", isStatusChange, errors.Wrapf(err, "error in setting user status for user %s", user.MattermostUserID)
+				return "", isStatusChanged, errors.Wrapf(err, "error in setting user status for user %s", user.MattermostUserID)
 			}
-			isStatusChange = true
+			isStatusChanged = true
 		}
 
 		err := m.Store.StoreUserActiveEvents(user.MattermostUserID, []string{})
 		if err != nil {
-			return "", isStatusChange, errors.Wrapf(err, "error in storing active events for user %s", user.MattermostUserID)
+			return "", isStatusChanged, errors.Wrapf(err, "error in storing active events for user %s", user.MattermostUserID)
 		}
-		return message, isStatusChange, nil
+		return message, isStatusChanged, nil
 	}
 
 	remoteHashes := []string{}
@@ -283,20 +283,20 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, status *model.S
 			m.Store.StoreUser(user)
 			err = m.Store.StoreUserActiveEvents(user.MattermostUserID, remoteHashes)
 			if err != nil {
-				return "", isStatusChange, errors.Wrapf(err, "error in storing active events for user %s", user.MattermostUserID)
+				return "", isStatusChanged, errors.Wrapf(err, "error in storing active events for user %s", user.MattermostUserID)
 			}
-			return "User was already marked as busy. No status change.", isStatusChange, nil
+			return "User was already marked as busy. No status change.", isStatusChanged, nil
 		}
 		err = m.setStatusOrAskUser(user, status, events, false)
 		if err != nil {
-			return "", isStatusChange, errors.Wrapf(err, "error in setting user status for user %s", user.MattermostUserID)
+			return "", isStatusChanged, errors.Wrapf(err, "error in setting user status for user %s", user.MattermostUserID)
 		}
-		isStatusChange = true
+		isStatusChanged = true
 		err = m.Store.StoreUserActiveEvents(user.MattermostUserID, remoteHashes)
 		if err != nil {
-			return "", isStatusChange, errors.Wrapf(err, "error in storing active events for user %s", user.MattermostUserID)
+			return "", isStatusChanged, errors.Wrapf(err, "error in storing active events for user %s", user.MattermostUserID)
 		}
-		return fmt.Sprintf("User was free, but is now busy (%s). Set status to busy.", busyStatus), isStatusChange, nil
+		return fmt.Sprintf("User was free, but is now busy (%s). Set status to busy.", busyStatus), isStatusChanged, nil
 	}
 
 	newEventExists := false
@@ -315,25 +315,25 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, status *model.S
 	}
 
 	if !newEventExists {
-		return fmt.Sprintf("No change in active events. Total number of events: %d", len(events)), isStatusChange, nil
+		return fmt.Sprintf("No change in active events. Total number of events: %d", len(events)), isStatusChanged, nil
 	}
 
 	message := "User is already busy. No status change."
 	if currentStatus != busyStatus {
 		err := m.setStatusOrAskUser(user, status, events, false)
 		if err != nil {
-			return "", isStatusChange, errors.Wrapf(err, "error in setting user status for user %s", user.MattermostUserID)
+			return "", isStatusChanged, errors.Wrapf(err, "error in setting user status for user %s", user.MattermostUserID)
 		}
-		isStatusChange = true
+		isStatusChanged = true
 		message = fmt.Sprintf("User was free, but is now busy. Set status to busy (%s).", busyStatus)
 	}
 
 	err := m.Store.StoreUserActiveEvents(user.MattermostUserID, remoteHashes)
 	if err != nil {
-		return "", isStatusChange, errors.Wrapf(err, "error in storing active events for user %s", user.MattermostUserID)
+		return "", isStatusChanged, errors.Wrapf(err, "error in storing active events for user %s", user.MattermostUserID)
 	}
 
-	return message, isStatusChange, nil
+	return message, isStatusChanged, nil
 }
 
 // setStatusOrAskUser to which status change, and whether it should update the status automatically or ask the user.
