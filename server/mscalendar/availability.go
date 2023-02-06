@@ -27,8 +27,8 @@ const (
 )
 
 type StatusSyncJobSummary struct {
-	NumberOfUserErrorsInStatusChange int
-	NumberOfUsersStatusChange        int
+	NumberOfUsersFailedStatusChanged int
+	NumberOfUsersStatusChanged       int
 	NumberOfUsersProcessed           int
 }
 
@@ -65,11 +65,11 @@ func (m *mscalendar) SyncAll() (string, *StatusSyncJobSummary, error) {
 }
 
 func (m *mscalendar) syncUsers(userIndex store.UserIndex) (string, *StatusSyncJobSummary, error) {
-	summarySyncJob := &StatusSyncJobSummary{}
+	syncJobsummary := &StatusSyncJobSummary{}
 	if len(userIndex) == 0 {
-		return "No connected users found", summarySyncJob, nil
+		return "No connected users found", syncJobsummary, nil
 	}
-	summarySyncJob.NumberOfUsersProcessed = len(userIndex)
+	syncJobsummary.NumberOfUsersProcessed = len(userIndex)
 
 	numberOfLogs := 0
 	users := []*store.User{}
@@ -92,27 +92,27 @@ func (m *mscalendar) syncUsers(userIndex store.UserIndex) (string, *StatusSyncJo
 		}
 	}
 	if len(users) == 0 {
-		return "No users need to be synced", summarySyncJob, nil
+		return "No users need to be synced", syncJobsummary, nil
 	}
 
 	calendarViews, err := m.GetCalendarViews(users)
 	if err != nil {
-		return "", summarySyncJob, errors.Wrap(err, "not able to get calendar views for connected users.")
+		return "", syncJobsummary, errors.Wrap(err, "not able to get calendar views for connected users.")
 	}
 	if len(calendarViews) == 0 {
-		return "No calendar views found", summarySyncJob, nil
+		return "No calendar views found", syncJobsummary, nil
 	}
 
 	m.deliverReminders(users, calendarViews)
-	out, numberOfUsersStatusChange, numberOfUserErrorsInStatusChange, err := m.setUserStatuses(users, calendarViews)
+	out, numberOfUsersStatusChanged, numberOfUsersFailedStatusChanged, err := m.setUserStatuses(users, calendarViews)
 	if err != nil {
-		return "", summarySyncJob, errors.Wrap(err, "error setting the user statuses.")
+		return "", syncJobsummary, errors.Wrap(err, "error setting the user statuses.")
 	}
 
-	summarySyncJob.NumberOfUserErrorsInStatusChange = numberOfUserErrorsInStatusChange
-	summarySyncJob.NumberOfUsersStatusChange = numberOfUsersStatusChange
+	syncJobsummary.NumberOfUsersFailedStatusChanged = numberOfUsersFailedStatusChanged
+	syncJobsummary.NumberOfUsersStatusChanged = numberOfUsersStatusChanged
 
-	return out, summarySyncJob, nil
+	return out, syncJobsummary, nil
 }
 
 func (m *mscalendar) deliverReminders(users []*store.User, calendarViews []*remote.ViewCalendarResponse) {
@@ -182,7 +182,7 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 
 	var res string
 	for _, view := range calendarViews {
-		isStatusChange := false
+		isStatusChanged := false
 		user, ok := usersByRemoteID[view.RemoteUserID]
 		if !ok {
 			continue
@@ -205,7 +205,7 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 		}
 
 		var err error
-		res, isStatusChange, err = m.setStatusFromCalendarView(user, status, view)
+		res, isStatusChanged, err = m.setStatusFromCalendarView(user, status, view)
 		if err != nil {
 			if numberOfLogs < logTruncateLimit {
 				m.Logger.Warnf("Error setting user %s status. err=%v", user.MattermostUserID, err)
@@ -215,7 +215,7 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 			numberOfLogs++
 			numberOfUserErrorInStatusChange++
 		}
-		if isStatusChange {
+		if isStatusChanged {
 			numberOfUserStatusChange++
 		}
 	}
