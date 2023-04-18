@@ -15,6 +15,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/views"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/fields"
@@ -140,10 +141,10 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 	n.Subscription = sub.Remote
 	n.SubscriptionCreator = creator.Remote
 
-	client := processor.Remote.MakeClient(context.Background(), creator.OAuth2Token)
+	client := processor.Remote.MakeClient(context.Background(), processor.Poster, processor.Store, creator.MattermostUserID, creator.OAuth2Token)
 
 	if n.RecommendRenew {
-		var renewed *remote.Subscription
+		var renewed *serializer.Subscription
 		renewed, err = client.RenewSubscription(n.SubscriptionID)
 		if err != nil {
 			return err
@@ -255,7 +256,7 @@ func (processor *notificationProcessor) newEventSlackAttachment(n *remote.Notifi
 	return sa
 }
 
-func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.Notification, prior *remote.Event, timezone string) (bool, *model.SlackAttachment) {
+func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.Notification, prior *serializer.Event, timezone string) (bool, *model.SlackAttachment) {
 	sa := processor.newSlackAttachment(n)
 	sa.Title = "(updated) " + sa.Title
 
@@ -363,8 +364,8 @@ func NewPostActionForEventResponse(eventID, response, url string) []*model.PostA
 	return []*model.PostAction{pa}
 }
 
-func eventToFields(e *remote.Event, timezone string) fields.Fields {
-	date := func(dtStart, dtEnd *remote.DateTime) (time.Time, time.Time, string) {
+func eventToFields(e *serializer.Event, timezone string) fields.Fields {
+	date := func(dtStart, dtEnd *serializer.DateTime) (time.Time, time.Time, string) {
 		if dtStart == nil || dtEnd == nil {
 			return time.Time{}, time.Time{}, "n/a"
 		}

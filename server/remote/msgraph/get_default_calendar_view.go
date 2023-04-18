@@ -11,11 +11,12 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 )
 
 type calendarViewResponse struct {
-	Error *remote.APIError `json:"error,omitempty"`
-	Value []*remote.Event  `json:"value,omitempty"`
+	Error *remote.APIError    `json:"error,omitempty"`
+	Value []*serializer.Event `json:"value,omitempty"`
 }
 
 type calendarViewSingleResponse struct {
@@ -29,13 +30,18 @@ type calendarViewBatchResponse struct {
 	Responses []*calendarViewSingleResponse `json:"responses"`
 }
 
-func (c *client) GetDefaultCalendarView(remoteUserID string, start, end time.Time) ([]*remote.Event, error) {
+func (c *client) GetDefaultCalendarView(remoteUserID string, start, end time.Time) ([]*serializer.Event, error) {
 	paramStr := getQueryParamStringForCalendarView(start, end)
 
+	if !c.CheckUserStatus() {
+		c.Logger.Warnf(LogUserInActive, c.mattermostUserID)
+		return nil, errors.New(ErrorUserInActive)
+	}
 	res := &calendarViewResponse{}
 	err := c.rbuilder.Users().ID(remoteUserID).CalendarView().Request().JSONRequest(
 		c.ctx, http.MethodGet, paramStr, nil, res)
 	if err != nil {
+		c.ChangeUserStatus(err)
 		return nil, errors.Wrap(err, "msgraph GetDefaultCalendarView")
 	}
 
@@ -44,6 +50,10 @@ func (c *client) GetDefaultCalendarView(remoteUserID string, start, end time.Tim
 
 func (c *client) DoBatchViewCalendarRequests(allParams []*remote.ViewCalendarParams) ([]*remote.ViewCalendarResponse, error) {
 	requests := []*singleRequest{}
+	if !c.CheckUserStatus() {
+		c.Logger.Warnf(LogUserInActive, c.mattermostUserID)
+		return nil, errors.New(ErrorUserInActive)
+	}
 	for _, params := range allParams {
 		u := getCalendarViewURL(params)
 		req := &singleRequest{
@@ -61,6 +71,7 @@ func (c *client) DoBatchViewCalendarRequests(allParams []*remote.ViewCalendarPar
 		batchRes := &calendarViewBatchResponse{}
 		err := c.batchRequest(req, batchRes)
 		if err != nil {
+			c.ChangeUserStatus(err)
 			return nil, errors.Wrap(err, "msgraph ViewCalendar batch request")
 		}
 

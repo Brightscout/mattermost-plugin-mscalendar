@@ -7,18 +7,19 @@ import (
 	"time"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 )
 
 type Calendar interface {
 	CreateCalendar(user *User, calendar *remote.Calendar) (*remote.Calendar, error)
-	CreateEvent(user *User, event *remote.Event, mattermostUserIDs []string) (*remote.Event, error)
+	CreateEvent(user *User, event *serializer.Event, mattermostUserIDs []string) (*serializer.Event, error)
 	DeleteCalendar(user *User, calendarID string) error
 	FindMeetingTimes(user *User, meetingParams *remote.FindMeetingTimesParameters) (*remote.MeetingTimeSuggestionResults, error)
 	GetCalendars(user *User) ([]*remote.Calendar, error)
-	ViewCalendar(user *User, from, to time.Time) ([]*remote.Event, error)
+	ViewCalendar(user *User, from, to time.Time) ([]*serializer.Event, error)
 }
 
-func (m *mscalendar) ViewCalendar(user *User, from, to time.Time) ([]*remote.Event, error) {
+func (m *mscalendar) ViewCalendar(user *User, from, to time.Time) ([]*serializer.Event, error) {
 	err := m.Filter(
 		withClient,
 		withUserExpanded(user),
@@ -29,7 +30,7 @@ func (m *mscalendar) ViewCalendar(user *User, from, to time.Time) ([]*remote.Eve
 	return m.client.GetDefaultCalendarView(user.Remote.ID, from, to)
 }
 
-func (m *mscalendar) getTodayCalendarEvents(user *User, now time.Time, timezone string) ([]*remote.Event, error) {
+func (m *mscalendar) getTodayCalendarEvents(user *User, now time.Time, timezone string) ([]*serializer.Event, error) {
 	err := m.Filter(
 		withClient,
 	)
@@ -57,7 +58,7 @@ func (m *mscalendar) CreateCalendar(user *User, calendar *remote.Calendar) (*rem
 	return m.client.CreateCalendar(user.Remote.ID, calendar)
 }
 
-func (m *mscalendar) CreateEvent(user *User, event *remote.Event, mattermostUserIDs []string) (*remote.Event, error) {
+func (m *mscalendar) CreateEvent(user *User, event *serializer.Event, mattermostUserIDs []string) (*serializer.Event, error) {
 	err := m.Filter(
 		withClient,
 		withUserExpanded(user),

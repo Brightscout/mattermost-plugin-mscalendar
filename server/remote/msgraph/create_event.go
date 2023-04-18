@@ -6,16 +6,20 @@ package msgraph
 import (
 	"net/http"
 
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 	"github.com/pkg/errors"
-
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
 
 // CreateEvent creates a calendar event
-func (c *client) CreateEvent(remoteUserID string, in *remote.Event) (*remote.Event, error) {
-	var out = remote.Event{}
+func (c *client) CreateEvent(remoteUserID string, in *serializer.Event) (*serializer.Event, error) {
+	var out = serializer.Event{}
+	if !c.CheckUserStatus() {
+		c.Logger.Warnf(LogUserInActive, c.mattermostUserID)
+		return nil, errors.New(ErrorUserInActive)
+	}
 	err := c.rbuilder.Users().ID(remoteUserID).Events().Request().JSONRequest(c.ctx, http.MethodPost, "", &in, &out)
 	if err != nil {
+		c.ChangeUserStatus(err)
 		return nil, errors.Wrap(err, "msgraph CreateEvent")
 	}
 	return &out, nil

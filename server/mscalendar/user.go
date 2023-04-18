@@ -10,7 +10,7 @@ import (
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/pkg/errors"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 )
 
@@ -18,7 +18,7 @@ type Users interface {
 	GetActingUser() *User
 	GetTimezone(user *User) (string, error)
 	DisconnectUser(mattermostUserID string) error
-	GetRemoteUser(mattermostUserID string) (*remote.User, error)
+	GetRemoteUser(mattermostUserID string) (*serializer.User, error)
 	IsAuthorizedAdmin(mattermostUserID string) (bool, error)
 	GetUserSettings(user *User) (*store.Settings, error)
 }
@@ -155,7 +155,7 @@ func (m *mscalendar) DisconnectUser(mattermostUserID string) error {
 	return nil
 }
 
-func (m *mscalendar) GetRemoteUser(mattermostUserID string) (*remote.User, error) {
+func (m *mscalendar) GetRemoteUser(mattermostUserID string) (*serializer.User, error) {
 	storedUser, err := m.Store.LoadUser(mattermostUserID)
 	if err != nil {
 		return nil, err

@@ -9,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 	flag "github.com/spf13/pflag"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
 )
 
@@ -63,8 +63,8 @@ func (c *Command) createEvent(parameters ...string) (string, bool, error) {
 	return resp, false, nil
 }
 
-func parseCreateArgs(args []string, timeZone string) (*remote.Event, error) {
-	event := &remote.Event{}
+func parseCreateArgs(args []string, timeZone string) (*serializer.Event, error) {
+	event := &serializer.Event{}
 
 	createFlagSet := getCreateEventFlagSet()
 	err := createFlagSet.Parse(args)
@@ -112,7 +112,7 @@ func parseCreateArgs(args []string, timeZone string) (*remote.Event, error) {
 	if strings.HasPrefix(body, "--") {
 		return nil, errors.New("body flag requires an argument")
 	}
-	event.Body = &remote.ItemBody{
+	event.Body = &serializer.ItemBody{
 		Content: body,
 	}
 
@@ -123,7 +123,7 @@ func parseCreateArgs(args []string, timeZone string) (*remote.Event, error) {
 	if strings.HasPrefix(startTime, "--") {
 		return nil, errors.New("starttime flag requires an argument")
 	}
-	event.Start = &remote.DateTime{
+	event.Start = &serializer.DateTime{
 		DateTime: startTime,
 		TimeZone: timeZone,
 	}
@@ -135,7 +135,7 @@ func parseCreateArgs(args []string, timeZone string) (*remote.Event, error) {
 	if strings.HasPrefix(endTime, "--") {
 		return nil, errors.New("endtime flag requires an argument")
 	}
-	event.End = &remote.DateTime{
+	event.End = &serializer.DateTime{
 		DateTime: endTime,
 		TimeZone: timeZone,
 	}
@@ -163,10 +163,10 @@ func parseCreateArgs(args []string, timeZone string) (*remote.Event, error) {
 		if len(location) != 6 {
 			return nil, errors.New("test-location flag requires 6 parameters, including a comma for empty values")
 		}
-		event.Location = &remote.Location{
+		event.Location = &serializer.Location{
 			LocationType: "default",
 			DisplayName:  location[0],
-			Address: &remote.Address{
+			Address: &serializer.Address{
 				Street:          location[1],
 				City:            location[2],
 				State:           location[3],

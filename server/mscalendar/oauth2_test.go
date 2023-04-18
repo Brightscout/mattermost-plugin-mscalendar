@@ -17,6 +17,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_welcomer"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/msgraph"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store/mock_store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
@@ -88,7 +89,7 @@ func TestInitOAuth2(t *testing.T) {
 			name:             "MM user already connected",
 			mattermostUserID: "fake@mattermost.com",
 			setup: func(d *Dependencies) {
-				su := &store.User{Remote: &remote.User{Mail: "remote_email@example.com"}}
+				su := &store.User{Remote: &serializer.User{Mail: "remote_email@example.com"}}
 				us := d.Store.(*mock_store.MockStore)
 				us.EXPECT().LoadUser("fake@mattermost.com").Return(su, nil).Times(1)
 			},

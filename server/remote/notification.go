@@ -3,13 +3,15 @@
 
 package remote
 
+import "github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
+
 type Notification struct {
 	Webhook interface{}
 
 	// Notification data
-	Subscription        *Subscription
-	SubscriptionCreator *User
-	Event               *Event
+	Subscription        *serializer.Subscription
+	SubscriptionCreator *serializer.User
+	Event               *serializer.Event
 
 	// ClientState from the webhook. The handler is to validate against its own
 	// persistent secret.

@@ -11,6 +11,8 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	remote "github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	store "github.com/mattermost/mattermost-plugin-mscalendar/server/store"
+	bot "github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	oauth2 "golang.org/x/oauth2"
 )
 
@@ -52,17 +54,17 @@ func (mr *MockRemoteMockRecorder) HandleWebhook(arg0, arg1 interface{}) *gomock.
 }
 
 // MakeClient mocks base method.
-func (m *MockRemote) MakeClient(arg0 context.Context, arg1 *oauth2.Token) remote.Client {
+func (m *MockRemote) MakeClient(arg0 context.Context, arg1 bot.Poster, arg2 store.Store, arg3 string, arg4 *oauth2.Token) remote.Client {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "MakeClient", arg0, arg1)
+	ret := m.ctrl.Call(m, "MakeClient", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(remote.Client)
 	return ret0
 }
 
 // MakeClient indicates an expected call of MakeClient.
-func (mr *MockRemoteMockRecorder) MakeClient(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockRemoteMockRecorder) MakeClient(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MakeClient", reflect.TypeOf((*MockRemote)(nil).MakeClient), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MakeClient", reflect.TypeOf((*MockRemote)(nil).MakeClient), arg0, arg1, arg2, arg3, arg4)
 }
 
 // MakeSuperuserClient mocks base method.

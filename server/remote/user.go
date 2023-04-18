@@ -3,13 +3,6 @@
 
 package remote
 
-type User struct {
-	ID                string `json:"id"`
-	DisplayName       string `json:"displayName,omitempty"`
-	UserPrincipalName string `json:"userPrincipalName,omitempty"`
-	Mail              string `json:"mail,omitempty"`
-}
-
 type WorkingHours struct {
 	StartTime string `json:"startTime"`
 	EndTime   string `json:"endTime"`

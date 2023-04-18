@@ -14,6 +14,7 @@ import (
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
@@ -36,14 +37,17 @@ func NewRemote(conf *config.Config, logger bot.Logger) remote.Remote {
 }
 
 // MakeClient creates a new client for user-delegated permissions.
-func (r *impl) MakeClient(ctx context.Context, token *oauth2.Token) remote.Client {
+func (r *impl) MakeClient(ctx context.Context, poster bot.Poster, store store.Store, mattermostUserID string, token *oauth2.Token) remote.Client {
 	httpClient := r.NewOAuth2Config().Client(ctx, token)
 	c := &client{
-		conf:       r.conf,
-		ctx:        ctx,
-		httpClient: httpClient,
-		Logger:     r.logger,
-		rbuilder:   msgraph.NewClient(httpClient),
+		conf:             r.conf,
+		ctx:              ctx,
+		httpClient:       httpClient,
+		Logger:           r.logger,
+		rbuilder:         msgraph.NewClient(httpClient),
+		store:            store,
+		mattermostUserID: mattermostUserID,
+		poster:           poster,
 	}
 	return c
 }
@@ -67,7 +71,7 @@ func (r *impl) MakeSuperuserClient(ctx context.Context) (remote.Client, error) {
 		AccessToken: token,
 		TokenType:   "Bearer",
 	}
-	return r.MakeClient(ctx, o), nil
+	return r.MakeClient(ctx, nil, nil, "", o), nil
 }
 
 func (r *impl) NewOAuth2Config() *oauth2.Config {

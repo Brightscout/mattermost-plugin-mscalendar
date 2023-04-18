@@ -8,19 +8,20 @@ import (
 	"strings"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
 )
 
 func (c *Command) findMeetings(parameters ...string) (string, bool, error) {
 	meetingParams := &remote.FindMeetingTimesParameters{}
 
-	var attendees []remote.Attendee
+	var attendees []serializer.Attendee
 	for a := range parameters {
 		s := strings.Split(parameters[a], ":")
 		t, email := s[0], s[1]
-		attendee := remote.Attendee{
+		attendee := serializer.Attendee{
 			Type: t,
-			EmailAddress: &remote.EmailAddress{
+			EmailAddress: &serializer.EmailAddress{
 				Address: email,
 			},
 		}

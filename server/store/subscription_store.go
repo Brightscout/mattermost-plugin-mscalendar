@@ -6,7 +6,7 @@ package store
 import (
 	"fmt"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
 )
@@ -19,7 +19,7 @@ type SubscriptionStore interface {
 
 type Subscription struct {
 	PluginVersion       string
-	Remote              *remote.Subscription
+	Remote              *serializer.Subscription
 	MattermostCreatorID string
 }
 

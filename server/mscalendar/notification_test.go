@@ -16,6 +16,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_plugin_api"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/mock_remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store/mock_store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
@@ -29,20 +30,20 @@ func newTestNotificationProcessor(env Env) NotificationProcessor {
 	return processor
 }
 
-func newTestEvent(locationDisplayName string, subjectDisplayName string) *remote.Event {
-	return &remote.Event{
+func newTestEvent(locationDisplayName string, subjectDisplayName string) *serializer.Event {
+	return &serializer.Event{
 		ID:      "remote_event_id",
 		ICalUID: "remote_event_uid",
-		Organizer: &remote.Attendee{
-			EmailAddress: &remote.EmailAddress{
+		Organizer: &serializer.Attendee{
+			EmailAddress: &serializer.EmailAddress{
 				Address: "event_organizer_email",
 				Name:    "event_organizer_name",
 			},
 		},
-		Location: &remote.Location{
+		Location: &serializer.Location{
 			DisplayName: locationDisplayName,
 		},
-		ResponseStatus: &remote.EventResponseStatus{
+		ResponseStatus: &serializer.EventResponseStatus{
 			Response: "event_response",
 		},
 		Weblink:           "event_weblink",
@@ -55,7 +56,7 @@ func newTestEvent(locationDisplayName string, subjectDisplayName string) *remote
 func newTestSubscription() *store.Subscription {
 	return &store.Subscription{
 		PluginVersion: "x.x.x",
-		Remote: &remote.Subscription{
+		Remote: &serializer.Subscription{
 			ID:          "remote_subscription_id",
 			ClientState: "stored_client_state",
 			CreatorID:   "remote_user_id",
@@ -69,7 +70,7 @@ func newTestUser() *store.User {
 		Settings: store.Settings{
 			EventSubscriptionID: "remote_subscription_id",
 		},
-		Remote: &remote.User{ID: "remote_user_id"},
+		Remote: &serializer.User{ID: "remote_user_id"},
 		OAuth2Token: &oauth2.Token{
 			AccessToken: "creator_oauth_token",
 		},
@@ -81,9 +82,9 @@ func newTestNotification(clientState string, recommendRenew bool) *remote.Notifi
 	n := &remote.Notification{
 		SubscriptionID:      "remote_subscription_id",
 		IsBare:              true,
-		SubscriptionCreator: &remote.User{},
+		SubscriptionCreator: &serializer.User{},
 		Event:               newTestEvent("event_location_display_name", "event_subject"),
-		Subscription:        &remote.Subscription{},
+		Subscription:        &serializer.Subscription{},
 		ClientState:         clientState,
 		RecommendRenew:      recommendRenew,
 	}
@@ -93,7 +94,7 @@ func newTestNotification(clientState string, recommendRenew bool) *remote.Notifi
 func TestProcessNotification(t *testing.T) {
 	tcs := []struct {
 		notification  *remote.Notification
-		priorEvent    *remote.Event
+		priorEvent    *serializer.Event
 		name          string
 		expectedError string
 	}{
@@ -150,15 +151,15 @@ func TestProcessNotification(t *testing.T) {
 			mockStore.EXPECT().LoadUser("creator_mm_id").Return(user, nil).Times(1)
 
 			if tc.notification.ClientState == subscription.Remote.ClientState {
-				mockRemote.EXPECT().MakeClient(context.Background(), &oauth2.Token{
+				mockRemote.EXPECT().MakeClient(context.Background(), mockPoster, mockStore, "creator_mm_id", &oauth2.Token{
 					AccessToken: "creator_oauth_token",
 				}).Return(mockClient).Times(1)
 				mockClient.EXPECT().GetMailboxSettings(user.Remote.ID).Return(&remote.MailboxSettings{TimeZone: "Eastern Standard Time"}, nil)
 
 				if tc.notification.RecommendRenew {
-					mockClient.EXPECT().RenewSubscription("remote_subscription_id").Return(&remote.Subscription{}, nil).Times(1)
+					mockClient.EXPECT().RenewSubscription("remote_subscription_id").Return(&serializer.Subscription{}, nil).Times(1)
 					mockStore.EXPECT().StoreUserSubscription(user, &store.Subscription{
-						Remote:              &remote.Subscription{},
+						Remote:              &serializer.Subscription{},
 						MattermostCreatorID: "creator_mm_id",
 						PluginVersion:       "x.x.x",
 					}).Return(nil).Times(1)

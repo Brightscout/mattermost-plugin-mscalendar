@@ -12,7 +12,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_mscalendar"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 )
 
 func TestConnect(t *testing.T) {
@@ -28,7 +28,7 @@ func TestConnect(t *testing.T) {
 			command: "connect",
 			setup: func(m mscalendar.MSCalendar) {
 				mscal := m.(*mock_mscalendar.MockMSCalendar)
-				mscal.EXPECT().GetRemoteUser("user_id").Return(&remote.User{Mail: "user@email.com"}, nil).Times(1)
+				mscal.EXPECT().GetRemoteUser("user_id").Return(&serializer.User{Mail: "user@email.com"}, nil).Times(1)
 			},
 			expectedOutput: "Your Mattermost account is already connected to Microsoft Calendar account `user@email.com`. To connect to a different account, first run `/mscalendar disconnect`.",
 			expectedError:  "",

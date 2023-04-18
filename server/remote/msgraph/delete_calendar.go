@@ -10,8 +10,13 @@ import (
 )
 
 func (c *client) DeleteCalendar(remoteUserID string, calID string) error {
+	if !c.CheckUserStatus() {
+		c.Logger.Warnf(LogUserInActive, c.mattermostUserID)
+		return errors.New(ErrorUserInActive)
+	}
 	err := c.rbuilder.Users().ID(remoteUserID).Calendars().ID(calID).Request().Delete(c.ctx)
 	if err != nil {
+		c.ChangeUserStatus(err)
 		return errors.Wrap(err, "msgraph DeleteCalendar")
 	}
 	c.Logger.With(bot.LogContext{}).Infof("msgraph: DeleteCalendar deleted calendar `%v`.", calID)
