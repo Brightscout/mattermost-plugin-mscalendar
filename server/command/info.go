@@ -10,7 +10,6 @@ import (
 )
 
 func (c *Command) info(parameters ...string) (string, bool, error) {
-	c.createCalendar()
 	resp := fmt.Sprintf("Mattermost Microsoft Calendar plugin version: %s, "+
 		"[%s](https://github.com/mattermost/%s/commit/%s), built %s\n",
 		c.Config.PluginVersion,

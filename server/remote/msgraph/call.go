@@ -24,7 +24,6 @@ func (c *client) CallJSON(method, path string, in, out interface{}) (responseDat
 	if err != nil {
 		return nil, err
 	}
-
 	return c.call(method, path, contentType, buf, out)
 }
 
