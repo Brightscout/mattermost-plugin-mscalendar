@@ -4,7 +4,6 @@
 package msgraph
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"

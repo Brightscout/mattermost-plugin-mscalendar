@@ -7,8 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 	"github.com/stretchr/testify/require"
+
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 )
 
 func TestDateTime_Time(t *testing.T) {

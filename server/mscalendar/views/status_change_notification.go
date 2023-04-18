@@ -6,8 +6,9 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 	"github.com/mattermost/mattermost-server/v5/model"
+
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 )
 
 var prettyStatuses = map[string]string{
