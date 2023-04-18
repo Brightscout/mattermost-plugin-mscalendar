@@ -6,8 +6,9 @@ package msgraph
 import (
 	"net/http"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 	"github.com/pkg/errors"
+
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 )
 
 // CreateEvent creates a calendar event

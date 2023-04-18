@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
+
 	"github.com/pkg/errors"
 )
 
@@ -86,7 +87,7 @@ func (c *client) ChangeUserStatus(err error) {
 
 	// Marking the user as inactive
 	user.OAuth2Token.AccessToken = ""
-	if c.store.StoreUser(user); err != nil {
+	if err = c.store.StoreUser(user); err != nil {
 		c.Logger.Errorf("Not able to store the user %s. %s", c.mattermostUserID, err.Error())
 		return
 	}

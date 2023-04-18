@@ -6,9 +6,10 @@ package msgraph
 import (
 	"net/http"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 	"github.com/pkg/errors"
 	msgraph "github.com/yaegashi/msgraph.go/v1.0"
+
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 )
 
 func (c *client) GetEvent(remoteUserID, eventID string) (*serializer.Event, error) {
