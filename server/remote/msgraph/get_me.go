@@ -13,7 +13,7 @@ import (
 
 const (
 	ErrorUserInActive        = "You have been marked inactive. Please disconnect and reconnect your account again."
-	LogUserInActive          = "User %s is inactive. Please disconnect and reconnect your account again."
+	LogUserInactive          = "User %s is inactive. Please disconnect and reconnect your account."
 	ErrorRefreshTokenExpired = "The refresh token has expired due to inactivity"
 )
 

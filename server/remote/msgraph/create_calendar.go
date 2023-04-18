@@ -16,7 +16,7 @@ import (
 func (c *client) CreateCalendar(remoteUserID string, calIn *remote.Calendar) (*remote.Calendar, error) {
 	var calOut = remote.Calendar{}
 	if !c.CheckUserStatus() {
-		c.Logger.Warnf(LogUserInActive, c.mattermostUserID)
+		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
 		return nil, errors.New(ErrorUserInActive)
 	}
 

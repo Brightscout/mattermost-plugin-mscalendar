@@ -34,7 +34,7 @@ func (c *client) GetDefaultCalendarView(remoteUserID string, start, end time.Tim
 	paramStr := getQueryParamStringForCalendarView(start, end)
 
 	if !c.CheckUserStatus() {
-		c.Logger.Warnf(LogUserInActive, c.mattermostUserID)
+		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
 		return nil, errors.New(ErrorUserInActive)
 	}
 
@@ -52,7 +52,7 @@ func (c *client) GetDefaultCalendarView(remoteUserID string, start, end time.Tim
 func (c *client) DoBatchViewCalendarRequests(allParams []*remote.ViewCalendarParams) ([]*remote.ViewCalendarResponse, error) {
 	requests := []*singleRequest{}
 	if !c.CheckUserStatus() {
-		c.Logger.Warnf(LogUserInActive, c.mattermostUserID)
+		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
 		return nil, errors.New(ErrorUserInActive)
 	}
 

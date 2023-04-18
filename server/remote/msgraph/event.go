@@ -15,7 +15,7 @@ import (
 func (c *client) GetEvent(remoteUserID, eventID string) (*serializer.Event, error) {
 	e := &serializer.Event{}
 	if !c.CheckUserStatus() {
-		c.Logger.Warnf(LogUserInActive, c.mattermostUserID)
+		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
 		return nil, errors.New(ErrorUserInActive)
 	}
 
@@ -31,7 +31,7 @@ func (c *client) GetEvent(remoteUserID, eventID string) (*serializer.Event, erro
 func (c *client) AcceptEvent(remoteUserID, eventID string) error {
 	dummy := &msgraph.EventAcceptRequestParameter{}
 	if !c.CheckUserStatus() {
-		c.Logger.Warnf(LogUserInActive, c.mattermostUserID)
+		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
 		return errors.New(ErrorUserInActive)
 	}
 
@@ -47,7 +47,7 @@ func (c *client) AcceptEvent(remoteUserID, eventID string) error {
 func (c *client) DeclineEvent(remoteUserID, eventID string) error {
 	dummy := &msgraph.EventDeclineRequestParameter{}
 	if !c.CheckUserStatus() {
-		c.Logger.Warnf(LogUserInActive, c.mattermostUserID)
+		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
 		return errors.New(ErrorUserInActive)
 	}
 
@@ -62,7 +62,7 @@ func (c *client) DeclineEvent(remoteUserID, eventID string) error {
 func (c *client) TentativelyAcceptEvent(remoteUserID, eventID string) error {
 	dummy := &msgraph.EventTentativelyAcceptRequestParameter{}
 	if !c.CheckUserStatus() {
-		c.Logger.Warnf(LogUserInActive, c.mattermostUserID)
+		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
 		return errors.New(ErrorUserInActive)
 	}
 

@@ -17,7 +17,7 @@ func (c *client) GetNotificationData(orig *remote.Notification) (*remote.Notific
 	n := *orig
 	wh := n.Webhook.(*webhook)
 	if !c.CheckUserStatus() {
-		c.Logger.Warnf(LogUserInActive, c.mattermostUserID)
+		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
 		return nil, errors.New(ErrorUserInActive)
 	}
 

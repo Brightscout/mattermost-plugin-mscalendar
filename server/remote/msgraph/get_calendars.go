@@ -17,7 +17,7 @@ func (c *client) GetCalendars(remoteUserID string) ([]*remote.Calendar, error) {
 		Value []*remote.Calendar `json:"value"`
 	}
 	if !c.CheckUserStatus() {
-		c.Logger.Warnf(LogUserInActive, c.mattermostUserID)
+		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
 		return nil, errors.New(ErrorUserInActive)
 	}
 

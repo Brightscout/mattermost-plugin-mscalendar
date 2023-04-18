@@ -15,7 +15,7 @@ import (
 func (c *client) CreateEvent(remoteUserID string, in *serializer.Event) (*serializer.Event, error) {
 	var out = serializer.Event{}
 	if !c.CheckUserStatus() {
-		c.Logger.Warnf(LogUserInActive, c.mattermostUserID)
+		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
 		return nil, errors.New(ErrorUserInActive)
 	}
 
