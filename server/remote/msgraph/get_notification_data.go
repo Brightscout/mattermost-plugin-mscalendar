@@ -20,6 +20,7 @@ func (c *client) GetNotificationData(orig *remote.Notification) (*remote.Notific
 		c.Logger.Warnf(LogUserInActive, c.mattermostUserID)
 		return nil, errors.New(ErrorUserInActive)
 	}
+
 	switch wh.ResourceData.DataType {
 	case "#Microsoft.Graph.Event":
 		event := serializer.Event{}

@@ -19,6 +19,7 @@ func (c *client) CreateCalendar(remoteUserID string, calIn *remote.Calendar) (*r
 		c.Logger.Warnf(LogUserInActive, c.mattermostUserID)
 		return nil, errors.New(ErrorUserInActive)
 	}
+
 	err := c.rbuilder.Users().ID(remoteUserID).Calendars().Request().JSONRequest(c.ctx, http.MethodPost, "", &calIn, &calOut)
 	if err != nil {
 		c.ChangeUserStatus(err)

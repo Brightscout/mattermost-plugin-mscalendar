@@ -35,6 +35,7 @@ func (c *client) CreateMySubscription(notificationURL string) (*serializer.Subsc
 		c.Logger.Warnf(LogUserInActive, c.mattermostUserID)
 		return nil, errors.New(ErrorUserInActive)
 	}
+
 	err := c.rbuilder.Subscriptions().Request().JSONRequest(c.ctx, http.MethodPost, "", sub, sub)
 	if err != nil {
 		c.ChangeUserStatus(err)
@@ -74,6 +75,7 @@ func (c *client) RenewSubscription(subscriptionID string) (*serializer.Subscript
 		c.Logger.Warnf(LogUserInActive, c.mattermostUserID)
 		return nil, errors.New(ErrorUserInActive)
 	}
+
 	expires := time.Now().Add(subscribeTTL)
 	v := struct {
 		ExpirationDateTime string `json:"expirationDateTime"`
@@ -103,6 +105,7 @@ func (c *client) ListSubscriptions() ([]*serializer.Subscription, error) {
 		c.Logger.Warnf(LogUserInActive, c.mattermostUserID)
 		return nil, errors.New(ErrorUserInActive)
 	}
+
 	err := c.rbuilder.Subscriptions().Request().JSONRequest(c.ctx, http.MethodGet, "", nil, &v)
 	if err != nil {
 		c.ChangeUserStatus(err)

@@ -37,6 +37,7 @@ func (c *client) GetDefaultCalendarView(remoteUserID string, start, end time.Tim
 		c.Logger.Warnf(LogUserInActive, c.mattermostUserID)
 		return nil, errors.New(ErrorUserInActive)
 	}
+
 	res := &calendarViewResponse{}
 	err := c.rbuilder.Users().ID(remoteUserID).CalendarView().Request().JSONRequest(
 		c.ctx, http.MethodGet, paramStr, nil, res)
@@ -54,6 +55,7 @@ func (c *client) DoBatchViewCalendarRequests(allParams []*remote.ViewCalendarPar
 		c.Logger.Warnf(LogUserInActive, c.mattermostUserID)
 		return nil, errors.New(ErrorUserInActive)
 	}
+
 	for _, params := range allParams {
 		u := getCalendarViewURL(params)
 		req := &singleRequest{

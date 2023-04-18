@@ -20,6 +20,7 @@ func (c *client) GetCalendars(remoteUserID string) ([]*remote.Calendar, error) {
 		c.Logger.Warnf(LogUserInActive, c.mattermostUserID)
 		return nil, errors.New(ErrorUserInActive)
 	}
+
 	req := c.rbuilder.Users().ID(remoteUserID).Calendars().Request()
 	req.Expand("children")
 	err := req.JSONRequest(c.ctx, http.MethodGet, "", nil, &v)

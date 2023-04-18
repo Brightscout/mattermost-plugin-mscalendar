@@ -18,6 +18,7 @@ func (c *client) FindMeetingTimes(remoteUserID string, params *remote.FindMeetin
 		c.Logger.Warnf(LogUserInActive, c.mattermostUserID)
 		return nil, errors.New(ErrorUserInActive)
 	}
+
 	req := c.rbuilder.Users().ID(remoteUserID).FindMeetingTimes(nil).Request()
 	err := req.JSONRequest(c.ctx, http.MethodPost, "", &params, &meetingsOut)
 	if err != nil {

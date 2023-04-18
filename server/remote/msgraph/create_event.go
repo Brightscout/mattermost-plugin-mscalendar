@@ -18,6 +18,7 @@ func (c *client) CreateEvent(remoteUserID string, in *serializer.Event) (*serial
 		c.Logger.Warnf(LogUserInActive, c.mattermostUserID)
 		return nil, errors.New(ErrorUserInActive)
 	}
+
 	err := c.rbuilder.Users().ID(remoteUserID).Events().Request().JSONRequest(c.ctx, http.MethodPost, "", &in, &out)
 	if err != nil {
 		c.ChangeUserStatus(err)
