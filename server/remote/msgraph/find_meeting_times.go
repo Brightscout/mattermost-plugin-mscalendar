@@ -16,7 +16,7 @@ func (c *client) FindMeetingTimes(remoteUserID string, params *remote.FindMeetin
 	meetingsOut := &remote.MeetingTimeSuggestionResults{}
 	if !c.CheckUserStatus() {
 		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
-		return nil, errors.New(ErrorUserInActive)
+		return nil, errors.New(ErrorUserInactive)
 	}
 
 	req := c.rbuilder.Users().ID(remoteUserID).FindMeetingTimes(nil).Request()

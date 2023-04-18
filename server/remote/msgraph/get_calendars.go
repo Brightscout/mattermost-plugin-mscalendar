@@ -18,7 +18,7 @@ func (c *client) GetCalendars(remoteUserID string) ([]*remote.Calendar, error) {
 	}
 	if !c.CheckUserStatus() {
 		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
-		return nil, errors.New(ErrorUserInActive)
+		return nil, errors.New(ErrorUserInactive)
 	}
 
 	req := c.rbuilder.Users().ID(remoteUserID).Calendars().Request()

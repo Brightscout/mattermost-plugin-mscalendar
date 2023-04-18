@@ -33,7 +33,7 @@ func (c *client) CreateMySubscription(notificationURL string) (*serializer.Subsc
 	}
 	if !c.CheckUserStatus() {
 		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
-		return nil, errors.New(ErrorUserInActive)
+		return nil, errors.New(ErrorUserInactive)
 	}
 
 	err := c.rbuilder.Subscriptions().Request().JSONRequest(c.ctx, http.MethodPost, "", sub, sub)
@@ -55,7 +55,7 @@ func (c *client) CreateMySubscription(notificationURL string) (*serializer.Subsc
 func (c *client) DeleteSubscription(subscriptionID string) error {
 	if !c.CheckUserStatus() {
 		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
-		return errors.New(ErrorUserInActive)
+		return errors.New(ErrorUserInactive)
 	}
 	err := c.rbuilder.Subscriptions().ID(subscriptionID).Request().Delete(c.ctx)
 	if err != nil {
@@ -73,7 +73,7 @@ func (c *client) DeleteSubscription(subscriptionID string) error {
 func (c *client) RenewSubscription(subscriptionID string) (*serializer.Subscription, error) {
 	if !c.CheckUserStatus() {
 		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
-		return nil, errors.New(ErrorUserInActive)
+		return nil, errors.New(ErrorUserInactive)
 	}
 
 	expires := time.Now().Add(subscribeTTL)
@@ -103,7 +103,7 @@ func (c *client) ListSubscriptions() ([]*serializer.Subscription, error) {
 	}
 	if !c.CheckUserStatus() {
 		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
-		return nil, errors.New(ErrorUserInActive)
+		return nil, errors.New(ErrorUserInactive)
 	}
 
 	err := c.rbuilder.Subscriptions().Request().JSONRequest(c.ctx, http.MethodGet, "", nil, &v)

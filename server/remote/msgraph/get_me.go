@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	ErrorUserInActive        = "You have been marked inactive. Please disconnect and reconnect your account again."
+	ErrorUserInactive        = "You have been marked inactive. Please disconnect and reconnect your account again."
 	LogUserInactive          = "User %s is inactive. Please disconnect and reconnect your account."
 	ErrorRefreshTokenExpired = "The refresh token has expired due to inactivity"
 )
@@ -60,7 +60,7 @@ func (c *client) CheckUserStatus() bool {
 
 	// Checking if the user is marked as inactive
 	if user.OAuth2Token.AccessToken == "" {
-		if _, err := c.poster.DM(c.mattermostUserID, ErrorUserInActive); err != nil {
+		if _, err := c.poster.DM(c.mattermostUserID, ErrorUserInactive); err != nil {
 			c.Logger.Errorf("Not able to DM the user %s. %s", c.mattermostUserID, err.Error())
 		}
 		return false

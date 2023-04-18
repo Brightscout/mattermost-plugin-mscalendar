@@ -12,7 +12,7 @@ import (
 func (c *client) DeleteCalendar(remoteUserID string, calID string) error {
 	if !c.CheckUserStatus() {
 		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
-		return errors.New(ErrorUserInActive)
+		return errors.New(ErrorUserInactive)
 	}
 	err := c.rbuilder.Users().ID(remoteUserID).Calendars().ID(calID).Request().Delete(c.ctx)
 	if err != nil {

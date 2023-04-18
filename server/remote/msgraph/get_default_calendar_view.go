@@ -35,7 +35,7 @@ func (c *client) GetDefaultCalendarView(remoteUserID string, start, end time.Tim
 
 	if !c.CheckUserStatus() {
 		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
-		return nil, errors.New(ErrorUserInActive)
+		return nil, errors.New(ErrorUserInactive)
 	}
 
 	res := &calendarViewResponse{}
@@ -53,7 +53,7 @@ func (c *client) DoBatchViewCalendarRequests(allParams []*remote.ViewCalendarPar
 	requests := []*singleRequest{}
 	if !c.CheckUserStatus() {
 		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
-		return nil, errors.New(ErrorUserInActive)
+		return nil, errors.New(ErrorUserInactive)
 	}
 
 	for _, params := range allParams {

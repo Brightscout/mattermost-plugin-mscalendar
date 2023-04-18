@@ -45,7 +45,7 @@ type getScheduleRequestParams struct {
 func (c *client) GetSchedule(requests []*remote.ScheduleUserInfo, startTime, endTime *serializer.DateTime, availabilityViewInterval int) ([]*remote.ScheduleInformation, error) {
 	if !c.CheckUserStatus() {
 		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
-		return nil, errors.New(ErrorUserInActive)
+		return nil, errors.New(ErrorUserInactive)
 	}
 
 	params := &getScheduleRequestParams{

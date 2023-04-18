@@ -16,7 +16,7 @@ func (c *client) GetEvent(remoteUserID, eventID string) (*serializer.Event, erro
 	e := &serializer.Event{}
 	if !c.CheckUserStatus() {
 		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
-		return nil, errors.New(ErrorUserInActive)
+		return nil, errors.New(ErrorUserInactive)
 	}
 
 	err := c.rbuilder.Users().ID(remoteUserID).Events().ID(eventID).Request().JSONRequest(
@@ -32,7 +32,7 @@ func (c *client) AcceptEvent(remoteUserID, eventID string) error {
 	dummy := &msgraph.EventAcceptRequestParameter{}
 	if !c.CheckUserStatus() {
 		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
-		return errors.New(ErrorUserInActive)
+		return errors.New(ErrorUserInactive)
 	}
 
 	err := c.rbuilder.Users().ID(remoteUserID).Events().ID(eventID).Accept(dummy).Request().Post(c.ctx)
@@ -48,7 +48,7 @@ func (c *client) DeclineEvent(remoteUserID, eventID string) error {
 	dummy := &msgraph.EventDeclineRequestParameter{}
 	if !c.CheckUserStatus() {
 		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
-		return errors.New(ErrorUserInActive)
+		return errors.New(ErrorUserInactive)
 	}
 
 	err := c.rbuilder.Users().ID(remoteUserID).Events().ID(eventID).Decline(dummy).Request().Post(c.ctx)
@@ -63,7 +63,7 @@ func (c *client) TentativelyAcceptEvent(remoteUserID, eventID string) error {
 	dummy := &msgraph.EventTentativelyAcceptRequestParameter{}
 	if !c.CheckUserStatus() {
 		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
-		return errors.New(ErrorUserInActive)
+		return errors.New(ErrorUserInactive)
 	}
 
 	err := c.rbuilder.Users().ID(remoteUserID).Events().ID(eventID).TentativelyAccept(dummy).Request().Post(c.ctx)
