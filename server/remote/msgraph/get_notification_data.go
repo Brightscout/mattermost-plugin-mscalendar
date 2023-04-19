@@ -9,17 +9,24 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
 func (c *client) GetNotificationData(orig *remote.Notification) (*remote.Notification, error) {
 	n := *orig
 	wh := n.Webhook.(*webhook)
+	if !c.CheckUserStatus() {
+		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
+		return nil, errors.New(ErrorUserInactive)
+	}
+
 	switch wh.ResourceData.DataType {
 	case "#Microsoft.Graph.Event":
-		event := remote.Event{}
+		event := serializer.Event{}
 		_, err := c.CallJSON(http.MethodGet, wh.Resource, nil, &event)
 		if err != nil {
+			c.ChangeUserStatus(err)
 			c.Logger.With(bot.LogContext{
 				"Resource":       wh.Resource,
 				"subscriptionID": wh.SubscriptionID,

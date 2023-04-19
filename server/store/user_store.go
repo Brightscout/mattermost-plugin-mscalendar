@@ -9,7 +9,7 @@ import (
 
 	"golang.org/x/oauth2"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
 )
 
@@ -36,7 +36,7 @@ type UserShort struct {
 
 type User struct {
 	Settings          Settings `json:"mattermostSettings,omitempty"`
-	Remote            *remote.User
+	Remote            *serializer.User
 	OAuth2Token       *oauth2.Token
 	PluginVersion     string
 	MattermostUserID  string

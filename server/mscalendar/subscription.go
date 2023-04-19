@@ -9,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 )
 
@@ -18,7 +18,7 @@ type Subscriptions interface {
 	RenewMyEventSubscription() (*store.Subscription, error)
 	DeleteOrphanedSubscription(ID string) error
 	DeleteMyEventSubscription() error
-	ListRemoteSubscriptions() ([]*remote.Subscription, error)
+	ListRemoteSubscriptions() ([]*serializer.Subscription, error)
 	LoadMyEventSubscription() (*store.Subscription, error)
 }
 
@@ -59,7 +59,7 @@ func (m *mscalendar) LoadMyEventSubscription() (*store.Subscription, error) {
 	return storedSub, err
 }
 
-func (m *mscalendar) ListRemoteSubscriptions() ([]*remote.Subscription, error) {
+func (m *mscalendar) ListRemoteSubscriptions() ([]*serializer.Subscription, error) {
 	err := m.Filter(withClient)
 	if err != nil {
 		return nil, err

@@ -19,5 +19,6 @@ func (c *client) GetMailboxSettings(remoteUserID string) (*remote.MailboxSetting
 	if err != nil {
 		return nil, errors.Wrap(err, "msgraph GetMailboxSettings")
 	}
+
 	return out, nil
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/views"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
 )
@@ -342,7 +343,7 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, status *model.S
 // - currentStatus: currentStatus, to decide whether to store this status when the user is free. This gets assigned to user.LastStatus at the beginning of the meeting.
 // - events: the list of events that are triggering this status change
 // - isFree: whether the user is free or busy, to decide to which status to change
-func (m *mscalendar) setStatusOrAskUser(user *store.User, currentStatus *model.Status, events []*remote.Event, isFree bool) error {
+func (m *mscalendar) setStatusOrAskUser(user *store.User, currentStatus *model.Status, events []*serializer.Event, isFree bool) error {
 	toSet := model.STATUS_ONLINE
 	if isFree && user.LastStatus != "" {
 		toSet = user.LastStatus
@@ -404,7 +405,7 @@ func (m *mscalendar) GetCalendarViews(users []*store.User) ([]*remote.ViewCalend
 	return m.client.DoBatchViewCalendarRequests(params)
 }
 
-func (m *mscalendar) notifyUpcomingEvents(mattermostUserID string, events []*remote.Event) {
+func (m *mscalendar) notifyUpcomingEvents(mattermostUserID string, events []*serializer.Event) {
 	var timezone string
 	for _, event := range events {
 		if event.IsCancelled {
@@ -438,8 +439,8 @@ func (m *mscalendar) notifyUpcomingEvents(mattermostUserID string, events []*rem
 	}
 }
 
-func filterBusyEvents(events []*remote.Event) []*remote.Event {
-	result := []*remote.Event{}
+func filterBusyEvents(events []*serializer.Event) []*serializer.Event {
+	result := []*serializer.Event{}
 	for _, e := range events {
 		if e.ShowAs == "busy" {
 			result = append(result, e)

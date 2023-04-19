@@ -6,10 +6,10 @@ import (
 	"sort"
 	"time"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 )
 
-func RenderCalendarView(events []*remote.Event, timeZone string) (string, error) {
+func RenderCalendarView(events []*serializer.Event, timeZone string) (string, error) {
 	if len(events) == 0 {
 		return "You have no upcoming events.", nil
 	}
@@ -46,7 +46,7 @@ func renderTableHeader() string {
 | :--: | :-- |`
 }
 
-func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, error) {
+func renderEvent(event *serializer.Event, asRow bool, timeZone string) (string, error) {
 	start := event.Start.In(timeZone).Time().Format(time.Kitchen)
 	end := event.End.In(timeZone).Time().Format(time.Kitchen)
 
@@ -65,14 +65,14 @@ func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, erro
 	return fmt.Sprintf(format, start, end, subject, link), nil
 }
 
-func groupEventsByDate(events []*remote.Event) [][]*remote.Event {
-	groups := map[string][]*remote.Event{}
+func groupEventsByDate(events []*serializer.Event) [][]*serializer.Event {
+	groups := map[string][]*serializer.Event{}
 
 	for _, event := range events {
 		date := event.Start.Time().Format("2006-01-02")
 		_, ok := groups[date]
 		if !ok {
-			groups[date] = []*remote.Event{}
+			groups[date] = []*serializer.Event{}
 		}
 
 		groups[date] = append(groups[date], event)
@@ -84,7 +84,7 @@ func groupEventsByDate(events []*remote.Event) [][]*remote.Event {
 	}
 	sort.Strings(days)
 
-	result := [][]*remote.Event{}
+	result := [][]*serializer.Event{}
 	for _, day := range days {
 		group := groups[day]
 		result = append(result, group)
@@ -92,7 +92,7 @@ func groupEventsByDate(events []*remote.Event) [][]*remote.Event {
 	return result
 }
 
-func RenderUpcomingEvent(event *remote.Event, timeZone string) (string, error) {
+func RenderUpcomingEvent(event *serializer.Event, timeZone string) (string, error) {
 	message := "You have an upcoming event:\n"
 	eventString, err := renderEvent(event, false, timeZone)
 	if err != nil {

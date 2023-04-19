@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
 )
@@ -19,7 +19,7 @@ const ttlAfterEventEnd = 30 * 24 * time.Hour // 30 days
 const defaultEventTTL = 30 * 24 * time.Hour  // 30 days
 
 type Event struct {
-	Remote        *remote.Event
+	Remote        *serializer.Event
 	PluginVersion string
 }
 

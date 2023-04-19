@@ -5,14 +5,16 @@ package remote
 
 import (
 	"time"
+
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 )
 
 type Calendar struct {
-	Owner        *User   `json:"owner,omitempty"`
-	ID           string  `json:"id"`
-	Name         string  `json:"name,omitempty"`
-	Events       []Event `json:"events,omitempty"`
-	CalendarView []Event `json:"calendarView,omitempty"`
+	Owner        *serializer.User   `json:"owner,omitempty"`
+	ID           string             `json:"id"`
+	Name         string             `json:"name,omitempty"`
+	Events       []serializer.Event `json:"events,omitempty"`
+	CalendarView []serializer.Event `json:"calendarView,omitempty"`
 }
 
 type ViewCalendarParams struct {
@@ -24,5 +26,5 @@ type ViewCalendarParams struct {
 type ViewCalendarResponse struct {
 	Error        *APIError
 	RemoteUserID string
-	Events       []*Event
+	Events       []*serializer.Event
 }

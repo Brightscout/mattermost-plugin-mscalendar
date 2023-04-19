@@ -12,6 +12,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_plugin_api"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/mock_remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store/mock_store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/tracker"
@@ -53,7 +54,7 @@ func TestProcessAllDailySummary(t *testing.T) {
 
 				s.EXPECT().LoadUser("user1_mm_id").Return(&store.User{
 					MattermostUserID: "user1_mm_id",
-					Remote:           &remote.User{ID: "user1_remote_id"},
+					Remote:           &serializer.User{ID: "user1_remote_id"},
 					Settings: store.Settings{
 						DailySummary: &store.DailySummaryUserSettings{
 							Enable:       true,
@@ -89,7 +90,7 @@ func TestProcessAllDailySummary(t *testing.T) {
 
 				s.EXPECT().LoadUser("user1_mm_id").Return(&store.User{
 					MattermostUserID: "user1_mm_id",
-					Remote:           &remote.User{ID: "user1_remote_id"},
+					Remote:           &serializer.User{ID: "user1_remote_id"},
 					Settings: store.Settings{
 						DailySummary: &store.DailySummaryUserSettings{
 							Enable:       true,
@@ -102,7 +103,7 @@ func TestProcessAllDailySummary(t *testing.T) {
 
 				s.EXPECT().LoadUser("user2_mm_id").Return(&store.User{
 					MattermostUserID: "user2_mm_id",
-					Remote:           &remote.User{ID: "user2_remote_id"},
+					Remote:           &serializer.User{ID: "user2_remote_id"},
 					Settings: store.Settings{
 						DailySummary: &store.DailySummaryUserSettings{
 							Enable:       true,
@@ -115,7 +116,7 @@ func TestProcessAllDailySummary(t *testing.T) {
 
 				s.EXPECT().LoadUser("user3_mm_id").Return(&store.User{
 					MattermostUserID: "user3_mm_id",
-					Remote:           &remote.User{ID: "user3_remote_id"},
+					Remote:           &serializer.User{ID: "user3_remote_id"},
 					Settings: store.Settings{
 						DailySummary: &store.DailySummaryUserSettings{
 							Enable:       true,
@@ -132,12 +133,12 @@ func TestProcessAllDailySummary(t *testing.T) {
 				hour, minute := 10, 0 // Time is "10:00AM"
 				moment := makeTime(hour, minute, loc)
 				mockClient.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Return([]*remote.ViewCalendarResponse{
-					{RemoteUserID: "user1_remote_id", Events: []*remote.Event{}},
-					{RemoteUserID: "user2_remote_id", Events: []*remote.Event{
+					{RemoteUserID: "user1_remote_id", Events: []*serializer.Event{}},
+					{RemoteUserID: "user2_remote_id", Events: []*serializer.Event{
 						{
 							Subject: "The subject",
-							Start:   remote.NewDateTime(moment, "Mountain Standard Time"),
-							End:     remote.NewDateTime(moment.Add(2*time.Hour), "Mountain Standard Time"),
+							Start:   serializer.NewDateTime(moment, "Mountain Standard Time"),
+							End:     serializer.NewDateTime(moment.Add(2*time.Hour), "Mountain Standard Time"),
 						},
 					}},
 				}, nil)

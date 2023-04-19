@@ -1,7 +1,4 @@
-// Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
-// See License for license information.
-
-package remote
+package serializer
 
 import (
 	"time"
@@ -9,10 +6,6 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/tz"
 )
 
-type EmailAddress struct {
-	Address string `json:"address"`
-	Name    string `json:"name,omitempty"`
-}
 type DateTime struct {
 	DateTime string `json:"dateTime"`
 	TimeZone string `json:"timeZone,omitempty"`

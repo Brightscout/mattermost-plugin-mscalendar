@@ -11,6 +11,7 @@ import (
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/views"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/tz"
 )
@@ -230,7 +231,7 @@ func shouldPostDailySummary(dsum *store.DailySummaryUserSettings, now time.Time)
 }
 
 func getTodayHoursForTimezone(now time.Time, timezone string) (start, end time.Time) {
-	t := remote.NewDateTime(now.UTC(), "UTC").In(timezone).Time()
+	t := serializer.NewDateTime(now.UTC(), "UTC").In(timezone).Time()
 	start = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
 	end = start.Add(24 * time.Hour)
 	return start, end

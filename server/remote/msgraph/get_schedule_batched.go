@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 )
 
 type getScheduleResponse struct {
@@ -26,8 +27,8 @@ type getScheduleBatchResponse struct {
 
 type getScheduleRequestParams struct {
 	// Overall start and end of entire search window
-	StartTime *remote.DateTime `json:"startTime"`
-	EndTime   *remote.DateTime `json:"endTime"`
+	StartTime *serializer.DateTime `json:"startTime"`
+	EndTime   *serializer.DateTime `json:"endTime"`
 
 	// List of emails of users that we want to check
 	Schedules []string `json:"schedules"`
@@ -41,7 +42,12 @@ type getScheduleRequestParams struct {
 	AvailabilityViewInterval int `json:"availabilityViewInterval"`
 }
 
-func (c *client) GetSchedule(requests []*remote.ScheduleUserInfo, startTime, endTime *remote.DateTime, availabilityViewInterval int) ([]*remote.ScheduleInformation, error) {
+func (c *client) GetSchedule(requests []*remote.ScheduleUserInfo, startTime, endTime *serializer.DateTime, availabilityViewInterval int) ([]*remote.ScheduleInformation, error) {
+	if !c.CheckUserStatus() {
+		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
+		return nil, errors.New(ErrorUserInactive)
+	}
+
 	params := &getScheduleRequestParams{
 		StartTime:                startTime,
 		EndTime:                  endTime,
@@ -60,6 +66,7 @@ func (c *client) GetSchedule(requests []*remote.ScheduleUserInfo, startTime, end
 		res := &getScheduleBatchResponse{}
 		err := c.batchRequest(req, res)
 		if err != nil {
+			c.ChangeUserStatus(err)
 			return nil, errors.Wrap(err, "msgraph batch GetSchedule")
 		}
 

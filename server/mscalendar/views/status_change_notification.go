@@ -8,7 +8,7 @@ import (
 
 	"github.com/mattermost/mattermost-server/v5/model"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 )
 
 var prettyStatuses = map[string]string{
@@ -18,7 +18,7 @@ var prettyStatuses = map[string]string{
 	model.STATUS_OFFLINE: "Offline",
 }
 
-func RenderStatusChangeNotificationView(events []*remote.Event, status, url string) *model.SlackAttachment {
+func RenderStatusChangeNotificationView(events []*serializer.Event, status, url string) *model.SlackAttachment {
 	for _, e := range events {
 		if e.Start.Time().After(time.Now()) {
 			return statusChangeAttachments(e, status, url)
@@ -48,7 +48,7 @@ func RenderEventWillStartLine(subject, weblink string, startTime time.Time) stri
 	return eventString
 }
 
-func renderScheduleItem(event *remote.Event, status string) string {
+func renderScheduleItem(event *serializer.Event, status string) string {
 	if event == nil {
 		return fmt.Sprintf("You have no upcoming events.\n Shall I change your status back to %s?", prettyStatuses[status])
 	}
@@ -59,7 +59,7 @@ func renderScheduleItem(event *remote.Event, status string) string {
 	return resp
 }
 
-func statusChangeAttachments(event *remote.Event, status, url string) *model.SlackAttachment {
+func statusChangeAttachments(event *serializer.Event, status, url string) *model.SlackAttachment {
 	actionYes := &model.PostAction{
 		Name: "Yes",
 		Integration: &model.PostActionIntegration{

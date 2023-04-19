@@ -14,10 +14,17 @@ import (
 // FindMeetingTimes finds meeting time suggestions for a calendar event
 func (c *client) FindMeetingTimes(remoteUserID string, params *remote.FindMeetingTimesParameters) (*remote.MeetingTimeSuggestionResults, error) {
 	meetingsOut := &remote.MeetingTimeSuggestionResults{}
+	if !c.CheckUserStatus() {
+		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
+		return nil, errors.New(ErrorUserInactive)
+	}
+
 	req := c.rbuilder.Users().ID(remoteUserID).FindMeetingTimes(nil).Request()
 	err := req.JSONRequest(c.ctx, http.MethodPost, "", &params, &meetingsOut)
 	if err != nil {
+		c.ChangeUserStatus(err)
 		return nil, errors.Wrap(err, "msgraph FindMeetingTimes")
 	}
+
 	return meetingsOut, nil
 }

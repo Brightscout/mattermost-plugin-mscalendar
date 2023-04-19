@@ -12,7 +12,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_mscalendar"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 )
 
@@ -29,7 +29,7 @@ func TestDisconnect(t *testing.T) {
 			command: "disconnect",
 			setup: func(m mscalendar.MSCalendar) {
 				mscal := m.(*mock_mscalendar.MockMSCalendar)
-				mscal.EXPECT().GetRemoteUser("user_id").Return(&remote.User{}, store.ErrNotFound).Times(1)
+				mscal.EXPECT().GetRemoteUser("user_id").Return(&serializer.User{}, store.ErrNotFound).Times(1)
 			},
 			expectedOutput: getNotConnectedText(),
 			expectedError:  "",
@@ -39,7 +39,7 @@ func TestDisconnect(t *testing.T) {
 			command: "disconnect",
 			setup: func(m mscalendar.MSCalendar) {
 				mscal := m.(*mock_mscalendar.MockMSCalendar)
-				mscal.EXPECT().GetRemoteUser("user_id").Return(&remote.User{}, errors.New("some error")).Times(1)
+				mscal.EXPECT().GetRemoteUser("user_id").Return(&serializer.User{}, errors.New("some error")).Times(1)
 			},
 			expectedOutput: "",
 			expectedError:  "Command /mscalendar disconnect failed: some error",
@@ -49,7 +49,7 @@ func TestDisconnect(t *testing.T) {
 			command: "disconnect",
 			setup: func(m mscalendar.MSCalendar) {
 				mscal := m.(*mock_mscalendar.MockMSCalendar)
-				mscal.EXPECT().GetRemoteUser("user_id").Return(&remote.User{}, nil).Times(1)
+				mscal.EXPECT().GetRemoteUser("user_id").Return(&serializer.User{}, nil).Times(1)
 				mscal.EXPECT().DisconnectUser("user_id").Return(errors.New("some error")).Times(1)
 			},
 			expectedOutput: "",
@@ -60,7 +60,7 @@ func TestDisconnect(t *testing.T) {
 			command: "disconnect",
 			setup: func(m mscalendar.MSCalendar) {
 				mscal := m.(*mock_mscalendar.MockMSCalendar)
-				mscal.EXPECT().GetRemoteUser("user_id").Return(&remote.User{}, nil).Times(1)
+				mscal.EXPECT().GetRemoteUser("user_id").Return(&serializer.User{}, nil).Times(1)
 				mscal.EXPECT().DisconnectUser("user_id").Return(nil).Times(1)
 				mscal.EXPECT().ClearSettingsPosts("user_id").Return().Times(1)
 			},

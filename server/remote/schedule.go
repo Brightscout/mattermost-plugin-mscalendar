@@ -3,6 +3,8 @@
 
 package remote
 
+import "github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
+
 const (
 	AvailabilityViewFree             = '0'
 	AvailabilityViewTentative        = '1'
@@ -47,8 +49,8 @@ type ScheduleUserInfo struct {
 }
 
 type ScheduleItem struct {
-	Start     *DateTime
-	End       *DateTime
+	Start     *serializer.DateTime
+	End       *serializer.DateTime
 	Status    string
 	Subject   string
 	Location  string

@@ -1,7 +1,4 @@
-// Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
-// See License for license information.
-
-package remote
+package serializer
 
 type Event struct {
 	Start                      *DateTime            `json:"start,omitempty"`
@@ -23,16 +20,6 @@ type Event struct {
 	IsCancelled                bool                 `json:"isCancelled,omitempty"`
 	IsAllDay                   bool                 `json:"isAllDay,omitempty"`
 	ResponseRequested          bool                 `json:"responseRequested,omitempty"`
-}
-
-type ItemBody struct {
-	Content     string `json:"content,omitempty"`
-	ContentType string `json:"contentType,omitempty"`
-}
-
-type EventResponseStatus struct {
-	Response string `json:"response,omitempty"`
-	Time     string `json:"time,omitempty"`
 }
 
 type Location struct {
@@ -59,4 +46,19 @@ type Attendee struct {
 	Status       *EventResponseStatus `json:"status,omitempty"`
 	EmailAddress *EmailAddress        `json:"emailAddress,omitempty"`
 	Type         string               `json:"type,omitempty"`
+}
+
+type EmailAddress struct {
+	Address string `json:"address"`
+	Name    string `json:"name,omitempty"`
+}
+
+type EventResponseStatus struct {
+	Response string `json:"response,omitempty"`
+	Time     string `json:"time,omitempty"`
+}
+
+type ItemBody struct {
+	Content     string `json:"content,omitempty"`
+	ContentType string `json:"contentType,omitempty"`
 }

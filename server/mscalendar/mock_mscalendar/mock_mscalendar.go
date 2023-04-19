@@ -11,6 +11,7 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	mscalendar "github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 	remote "github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	serializer "github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 	store "github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 )
 
@@ -107,10 +108,10 @@ func (mr *MockMSCalendarMockRecorder) CreateCalendar(arg0, arg1 interface{}) *go
 }
 
 // CreateEvent mocks base method.
-func (m *MockMSCalendar) CreateEvent(arg0 *mscalendar.User, arg1 *remote.Event, arg2 []string) (*remote.Event, error) {
+func (m *MockMSCalendar) CreateEvent(arg0 *mscalendar.User, arg1 *serializer.Event, arg2 []string) (*serializer.Event, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateEvent", arg0, arg1, arg2)
-	ret0, _ := ret[0].(*remote.Event)
+	ret0, _ := ret[0].(*serializer.Event)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -296,10 +297,10 @@ func (mr *MockMSCalendarMockRecorder) GetDailySummarySettingsForUser(arg0 interf
 }
 
 // GetRemoteUser mocks base method.
-func (m *MockMSCalendar) GetRemoteUser(arg0 string) (*remote.User, error) {
+func (m *MockMSCalendar) GetRemoteUser(arg0 string) (*serializer.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetRemoteUser", arg0)
-	ret0, _ := ret[0].(*remote.User)
+	ret0, _ := ret[0].(*serializer.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -356,10 +357,10 @@ func (mr *MockMSCalendarMockRecorder) IsAuthorizedAdmin(arg0 interface{}) *gomoc
 }
 
 // ListRemoteSubscriptions mocks base method.
-func (m *MockMSCalendar) ListRemoteSubscriptions() ([]*remote.Subscription, error) {
+func (m *MockMSCalendar) ListRemoteSubscriptions() ([]*serializer.Subscription, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListRemoteSubscriptions")
-	ret0, _ := ret[0].([]*remote.Subscription)
+	ret0, _ := ret[0].([]*serializer.Subscription)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -517,10 +518,10 @@ func (mr *MockMSCalendarMockRecorder) TentativelyAcceptEvent(arg0, arg1 interfac
 }
 
 // ViewCalendar mocks base method.
-func (m *MockMSCalendar) ViewCalendar(arg0 *mscalendar.User, arg1, arg2 time.Time) ([]*remote.Event, error) {
+func (m *MockMSCalendar) ViewCalendar(arg0 *mscalendar.User, arg1, arg2 time.Time) ([]*serializer.Event, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ViewCalendar", arg0, arg1, arg2)
-	ret0, _ := ret[0].([]*remote.Event)
+	ret0, _ := ret[0].([]*serializer.Event)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

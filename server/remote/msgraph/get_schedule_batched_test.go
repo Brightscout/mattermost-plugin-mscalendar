@@ -10,14 +10,15 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 )
 
 func TestMakeSingleRequestForGetSchedule(t *testing.T) {
 	start := time.Now().UTC()
 	end := time.Now().UTC().Add(20)
 	params := &getScheduleRequestParams{
-		StartTime:                remote.NewDateTime(start, "UTC"),
-		EndTime:                  remote.NewDateTime(end, "UTC"),
+		StartTime:                serializer.NewDateTime(start, "UTC"),
+		EndTime:                  serializer.NewDateTime(end, "UTC"),
 		AvailabilityViewInterval: 15,
 	}
 	req := &remote.ScheduleUserInfo{

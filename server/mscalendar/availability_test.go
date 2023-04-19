@@ -16,6 +16,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_plugin_api"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/mock_remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store/mock_store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot/mock_bot"
@@ -24,13 +25,13 @@ import (
 func TestSyncStatusAll(t *testing.T) {
 	moment := time.Now().UTC()
 	eventHash := "event_id " + moment.Format(time.RFC3339)
-	busyEvent := &remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy"}
+	busyEvent := &serializer.Event{ICalUID: "event_id", Start: serializer.NewDateTime(moment, "UTC"), ShowAs: "busy"}
 
 	for name, tc := range map[string]struct {
 		apiError            *remote.APIError
 		currentStatus       string
 		newStatus           string
-		remoteEvents        []*remote.Event
+		remoteEvents        []*serializer.Event
 		activeEvents        []string
 		eventsToStore       []string
 		currentStatusManual bool
@@ -38,7 +39,7 @@ func TestSyncStatusAll(t *testing.T) {
 		getConfirmation     bool
 	}{
 		"Most common case, no events local or remote. No status change.": {
-			remoteEvents:        []*remote.Event{},
+			remoteEvents:        []*serializer.Event{},
 			activeEvents:        []string{},
 			currentStatus:       "online",
 			currentStatusManual: true,
@@ -48,7 +49,7 @@ func TestSyncStatusAll(t *testing.T) {
 			getConfirmation:     false,
 		},
 		"New remote event. Change status to DND.": {
-			remoteEvents:        []*remote.Event{busyEvent},
+			remoteEvents:        []*serializer.Event{busyEvent},
 			activeEvents:        []string{},
 			currentStatus:       "online",
 			currentStatusManual: true,
@@ -58,7 +59,7 @@ func TestSyncStatusAll(t *testing.T) {
 			getConfirmation:     false,
 		},
 		"Locally stored event is finished. Change status to online.": {
-			remoteEvents:        []*remote.Event{},
+			remoteEvents:        []*serializer.Event{},
 			activeEvents:        []string{eventHash},
 			currentStatus:       "dnd",
 			currentStatusManual: true,
@@ -68,7 +69,7 @@ func TestSyncStatusAll(t *testing.T) {
 			getConfirmation:     false,
 		},
 		"Locally stored event is still happening. No status change.": {
-			remoteEvents:        []*remote.Event{busyEvent},
+			remoteEvents:        []*serializer.Event{busyEvent},
 			activeEvents:        []string{eventHash},
 			currentStatus:       "dnd",
 			currentStatusManual: true,
@@ -78,7 +79,7 @@ func TestSyncStatusAll(t *testing.T) {
 			getConfirmation:     false,
 		},
 		"User has manually set themselves to online during event. Locally stored event is still happening, but we will ignore it. No status change.": {
-			remoteEvents:        []*remote.Event{busyEvent},
+			remoteEvents:        []*serializer.Event{busyEvent},
 			activeEvents:        []string{eventHash},
 			currentStatus:       "online",
 			currentStatusManual: true,
@@ -88,7 +89,7 @@ func TestSyncStatusAll(t *testing.T) {
 			getConfirmation:     false,
 		},
 		"Ignore non-busy event": {
-			remoteEvents:        []*remote.Event{{ID: "event_id_2", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "free"}},
+			remoteEvents:        []*serializer.Event{{ID: "event_id_2", Start: serializer.NewDateTime(moment, "UTC"), ShowAs: "free"}},
 			activeEvents:        []string{},
 			currentStatus:       "online",
 			currentStatusManual: true,
@@ -120,7 +121,7 @@ func TestSyncStatusAll(t *testing.T) {
 
 			mockUser := &store.User{
 				MattermostUserID: "user_mm_id",
-				Remote: &remote.User{
+				Remote: &serializer.User{
 					ID:   "user_remote_id",
 					Mail: "user_email@example.com",
 				},
@@ -190,10 +191,10 @@ func TestSyncStatusUserConfig(t *testing.T) {
 			runAssertions: func(deps *Dependencies, client remote.Client) {
 				c, papi, poster, s := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore)
 				moment := time.Now().UTC()
-				busyEvent := &remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy"}
+				busyEvent := &serializer.Event{ICalUID: "event_id", Start: serializer.NewDateTime(moment, "UTC"), ShowAs: "busy"}
 
 				c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Times(1).Return([]*remote.ViewCalendarResponse{
-					{Events: []*remote.Event{busyEvent}, RemoteUserID: "user_remote_id"},
+					{Events: []*serializer.Event{busyEvent}, RemoteUserID: "user_remote_id"},
 				}, nil)
 				papi.EXPECT().GetMattermostUserStatusesByIds([]string{"user_mm_id"}).Return([]*model.Status{{Status: "online", Manual: true, UserId: "user_mm_id"}}, nil)
 
@@ -213,7 +214,7 @@ func TestSyncStatusUserConfig(t *testing.T) {
 			s := env.Dependencies.Store.(*mock_store.MockStore)
 			s.EXPECT().LoadUser("user_mm_id").Return(&store.User{
 				MattermostUserID: "user_mm_id",
-				Remote: &remote.User{
+				Remote: &serializer.User{
 					ID:   "user_remote_id",
 					Mail: "user_email@example.com",
 				},
@@ -232,53 +233,53 @@ func TestSyncStatusUserConfig(t *testing.T) {
 func TestReminders(t *testing.T) {
 	for name, tc := range map[string]struct {
 		apiError       *remote.APIError
-		remoteEvents   []*remote.Event
+		remoteEvents   []*serializer.Event
 		numReminders   int
 		shouldLogError bool
 	}{
 		"Most common case, no remote events. No reminder.": {
-			remoteEvents:   []*remote.Event{},
+			remoteEvents:   []*serializer.Event{},
 			numReminders:   0,
 			shouldLogError: false,
 		},
 		"One remote event, but it is too far in the future.": {
-			remoteEvents: []*remote.Event{
-				{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(20*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
+			remoteEvents: []*serializer.Event{
+				{ICalUID: "event_id", Start: serializer.NewDateTime(time.Now().Add(20*time.Minute).UTC(), "UTC"), End: serializer.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
 			},
 			numReminders:   0,
 			shouldLogError: false,
 		},
 		"One remote event, but it is in the past.": {
-			remoteEvents: []*remote.Event{
-				{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(-15*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
+			remoteEvents: []*serializer.Event{
+				{ICalUID: "event_id", Start: serializer.NewDateTime(time.Now().Add(-15*time.Minute).UTC(), "UTC"), End: serializer.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
 			},
 			numReminders:   0,
 			shouldLogError: false,
 		},
 		"One remote event, but it is to soon in the future. Reminder has already occurred.": {
-			remoteEvents: []*remote.Event{
-				{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(2*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
+			remoteEvents: []*serializer.Event{
+				{ICalUID: "event_id", Start: serializer.NewDateTime(time.Now().Add(2*time.Minute).UTC(), "UTC"), End: serializer.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
 			},
 			numReminders:   0,
 			shouldLogError: false,
 		},
 		"One remote event, and is in the range for the reminder. Reminder should occur.": {
-			remoteEvents: []*remote.Event{
-				{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(7*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
+			remoteEvents: []*serializer.Event{
+				{ICalUID: "event_id", Start: serializer.NewDateTime(time.Now().Add(7*time.Minute).UTC(), "UTC"), End: serializer.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
 			},
 			numReminders:   1,
 			shouldLogError: false,
 		},
 		"Two remote event, and are in the range for the reminder. Two reminders should occur.": {
-			remoteEvents: []*remote.Event{
-				{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(7*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
-				{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(7*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
+			remoteEvents: []*serializer.Event{
+				{ICalUID: "event_id", Start: serializer.NewDateTime(time.Now().Add(7*time.Minute).UTC(), "UTC"), End: serializer.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
+				{ICalUID: "event_id", Start: serializer.NewDateTime(time.Now().Add(7*time.Minute).UTC(), "UTC"), End: serializer.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
 			},
 			numReminders:   2,
 			shouldLogError: false,
 		},
 		"Remote API Error. Error should be logged.": {
-			remoteEvents:   []*remote.Event{},
+			remoteEvents:   []*serializer.Event{},
 			numReminders:   0,
 			apiError:       &remote.APIError{Code: "403", Message: "Forbidden"},
 			shouldLogError: true,
@@ -295,7 +296,7 @@ func TestReminders(t *testing.T) {
 
 			loadUser := s.EXPECT().LoadUser("user_mm_id").Return(&store.User{
 				MattermostUserID: "user_mm_id",
-				Remote: &remote.User{
+				Remote: &serializer.User{
 					ID:   "user_remote_id",
 					Mail: "user_email@example.com",
 				},

@@ -11,6 +11,7 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	remote "github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	serializer "github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 )
 
 // MockClient is a mock of Client interface.
@@ -96,10 +97,10 @@ func (mr *MockClientMockRecorder) CreateCalendar(arg0, arg1 interface{}) *gomock
 }
 
 // CreateEvent mocks base method.
-func (m *MockClient) CreateEvent(arg0 string, arg1 *remote.Event) (*remote.Event, error) {
+func (m *MockClient) CreateEvent(arg0 string, arg1 *serializer.Event) (*serializer.Event, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateEvent", arg0, arg1)
-	ret0, _ := ret[0].(*remote.Event)
+	ret0, _ := ret[0].(*serializer.Event)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -111,10 +112,10 @@ func (mr *MockClientMockRecorder) CreateEvent(arg0, arg1 interface{}) *gomock.Ca
 }
 
 // CreateMySubscription mocks base method.
-func (m *MockClient) CreateMySubscription(arg0 string) (*remote.Subscription, error) {
+func (m *MockClient) CreateMySubscription(arg0 string) (*serializer.Subscription, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateMySubscription", arg0)
-	ret0, _ := ret[0].(*remote.Subscription)
+	ret0, _ := ret[0].(*serializer.Subscription)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -213,10 +214,10 @@ func (mr *MockClientMockRecorder) GetCalendars(arg0 interface{}) *gomock.Call {
 }
 
 // GetDefaultCalendarView mocks base method.
-func (m *MockClient) GetDefaultCalendarView(arg0 string, arg1, arg2 time.Time) ([]*remote.Event, error) {
+func (m *MockClient) GetDefaultCalendarView(arg0 string, arg1, arg2 time.Time) ([]*serializer.Event, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDefaultCalendarView", arg0, arg1, arg2)
-	ret0, _ := ret[0].([]*remote.Event)
+	ret0, _ := ret[0].([]*serializer.Event)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -228,10 +229,10 @@ func (mr *MockClientMockRecorder) GetDefaultCalendarView(arg0, arg1, arg2 interf
 }
 
 // GetEvent mocks base method.
-func (m *MockClient) GetEvent(arg0, arg1 string) (*remote.Event, error) {
+func (m *MockClient) GetEvent(arg0, arg1 string) (*serializer.Event, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetEvent", arg0, arg1)
-	ret0, _ := ret[0].(*remote.Event)
+	ret0, _ := ret[0].(*serializer.Event)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -258,10 +259,10 @@ func (mr *MockClientMockRecorder) GetMailboxSettings(arg0 interface{}) *gomock.C
 }
 
 // GetMe mocks base method.
-func (m *MockClient) GetMe() (*remote.User, error) {
+func (m *MockClient) GetMe() (*serializer.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetMe")
-	ret0, _ := ret[0].(*remote.User)
+	ret0, _ := ret[0].(*serializer.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -288,7 +289,7 @@ func (mr *MockClientMockRecorder) GetNotificationData(arg0 interface{}) *gomock.
 }
 
 // GetSchedule mocks base method.
-func (m *MockClient) GetSchedule(arg0 []*remote.ScheduleUserInfo, arg1, arg2 *remote.DateTime, arg3 int) ([]*remote.ScheduleInformation, error) {
+func (m *MockClient) GetSchedule(arg0 []*remote.ScheduleUserInfo, arg1, arg2 *serializer.DateTime, arg3 int) ([]*remote.ScheduleInformation, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSchedule", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].([]*remote.ScheduleInformation)
@@ -318,10 +319,10 @@ func (mr *MockClientMockRecorder) GetSuperuserToken() *gomock.Call {
 }
 
 // ListSubscriptions mocks base method.
-func (m *MockClient) ListSubscriptions() ([]*remote.Subscription, error) {
+func (m *MockClient) ListSubscriptions() ([]*serializer.Subscription, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListSubscriptions")
-	ret0, _ := ret[0].([]*remote.Subscription)
+	ret0, _ := ret[0].([]*serializer.Subscription)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -333,10 +334,10 @@ func (mr *MockClientMockRecorder) ListSubscriptions() *gomock.Call {
 }
 
 // RenewSubscription mocks base method.
-func (m *MockClient) RenewSubscription(arg0 string) (*remote.Subscription, error) {
+func (m *MockClient) RenewSubscription(arg0 string) (*serializer.Subscription, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RenewSubscription", arg0)
-	ret0, _ := ret[0].(*remote.Subscription)
+	ret0, _ := ret[0].(*serializer.Subscription)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

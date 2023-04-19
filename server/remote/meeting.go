@@ -3,17 +3,21 @@
 
 package remote
 
-import "time"
+import (
+	"time"
+
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
+)
 
 type FindMeetingTimesParameters struct {
-	ReturnSuggestionReasons   *bool               `json:"returnSuggestionReasons,omitempty"`
-	LocationConstraint        *LocationConstraint `json:"locationConstraint,omitempty"`
-	TimeConstraint            *TimeConstraint     `json:"timeConstraint,omitempty"`
-	MeetingDuration           *time.Duration      `json:"meetingDuration,omitempty"`
-	MaxCandidates             *int                `json:"maxCandidates,omitempty"`
-	IsOrganizerOptional       *bool               `json:"isOrganizerOptional,omitempty"`
-	MinimumAttendeePercentage *float64            `json:"minimumAttendeePercentage,omitempty"`
-	Attendees                 []Attendee          `json:"attendees,omitempty"`
+	ReturnSuggestionReasons   *bool                 `json:"returnSuggestionReasons,omitempty"`
+	LocationConstraint        *LocationConstraint   `json:"locationConstraint,omitempty"`
+	TimeConstraint            *TimeConstraint       `json:"timeConstraint,omitempty"`
+	MeetingDuration           *time.Duration        `json:"meetingDuration,omitempty"`
+	MaxCandidates             *int                  `json:"maxCandidates,omitempty"`
+	IsOrganizerOptional       *bool                 `json:"isOrganizerOptional,omitempty"`
+	MinimumAttendeePercentage *float64              `json:"minimumAttendeePercentage,omitempty"`
+	Attendees                 []serializer.Attendee `json:"attendees,omitempty"`
 }
 
 type TimeConstraint struct {
@@ -24,14 +28,14 @@ type MeetingTimeSuggestion struct {
 	MeetingTimeSlot       *TimeSlot
 	SuggestionReason      string `json:"suggestionReason"`
 	OrganizerAvailability string `json:"organizerAvailability"`
-	Locations             []*Location
+	Locations             []*serializer.Location
 	AttendeeAvailability  []*AttendeeAvailability
 	Confidence            float32 `json:"confidence"`
 	Order                 int32   `json:"order"`
 }
 
 type AttendeeAvailability struct {
-	Attendee     *Attendee
+	Attendee     *serializer.Attendee
 	Availability string `json:"availability"`
 }
 
@@ -41,8 +45,8 @@ type MeetingTimeSuggestionResults struct {
 }
 
 type TimeSlot struct {
-	Start *DateTime `json:"start,omitempty"`
-	End   *DateTime `json:"end,omitempty"`
+	Start *serializer.DateTime `json:"start,omitempty"`
+	End   *serializer.DateTime `json:"end,omitempty"`
 }
 
 type LocationConstraint struct {
@@ -52,6 +56,6 @@ type LocationConstraint struct {
 }
 
 type LocationConstraintItem struct {
-	Location            *Location
+	Location            *serializer.Location
 	ResolveAvailability *bool `json:"resolveAvailability,omitempty"`
 }
