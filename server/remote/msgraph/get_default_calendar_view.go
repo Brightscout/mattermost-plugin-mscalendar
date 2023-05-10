@@ -4,6 +4,9 @@
 package msgraph
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"time"
@@ -22,6 +25,7 @@ type calendarViewSingleResponse struct {
 	Headers map[string]string    `json:"headers"`
 	ID      string               `json:"id"`
 	Body    calendarViewResponse `json:"body"`
+	Value   []*remote.Event      `json:"value,omitempty"`
 	Status  int                  `json:"status"`
 }
 
@@ -42,41 +46,91 @@ func (c *client) GetDefaultCalendarView(remoteUserID string, start, end time.Tim
 	return res.Value, nil
 }
 
+func (c *client) getCalenderView(reqs *singleRequest) (*calendarViewSingleResponse, error) {
+	req, err := http.NewRequest(reqs.Method, reqs.URL, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Authorization", reqs.AccessToken.AccessToken)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var out *calendarViewSingleResponse
+	err = json.Unmarshal(body, &out)
+	if err != nil {
+		return nil, err
+	}
+
+	out.ID = reqs.ID
+
+	return out, err
+}
+
 func (c *client) DoBatchViewCalendarRequests(allParams []*remote.ViewCalendarParams) ([]*remote.ViewCalendarResponse, error) {
 	requests := []*singleRequest{}
 	for _, params := range allParams {
-		u := getCalendarViewURL(params)
+		paramStr := getQueryParamStringForCalendarView(params.StartTime, params.EndTime)
+		url := fmt.Sprintf("https://graph.microsoft.com/v1.0/me/calendarview%s", paramStr)
 		req := &singleRequest{
-			ID:      params.RemoteUserID,
-			URL:     u,
-			Method:  http.MethodGet,
-			Headers: map[string]string{},
+			ID:          params.RemoteUserID,
+			URL:         url,
+			Method:      http.MethodGet,
+			Headers:     map[string]string{},
+			AccessToken: params.AccessToken,
 		}
+
 		requests = append(requests, req)
 	}
 
-	batchRequests := prepareBatchRequests(requests)
-	var batchResponses []*calendarViewBatchResponse
-	for _, req := range batchRequests {
-		batchRes := &calendarViewBatchResponse{}
-		err := c.batchRequest(req, batchRes)
+	// batchRequests := prepareBatchRequests(requests)
+	// var batchResponses []*calendarViewBatchResponse
+	// for _, req := range batchRequests {
+	// 	batchRes := &calendarViewBatchResponse{}
+	// 	err := c.batchRequest(req, batchRes)
+	// 	if err != nil {
+	// 		return nil, errors.Wrap(err, "msgraph ViewCalendar batch request")
+	// 	}
+
+	// 	batchResponses = append(batchResponses, batchRes)
+	// }
+
+	// result := []*remote.ViewCalendarResponse{}
+	// for _, res := range batchResponses {
+	// 	for _, res := range batchRes.Responses {
+	// 		viewCalRes := &remote.ViewCalendarResponse{
+	// 			RemoteUserID: res.ID,
+	// 			Events:       res.Body.Value,
+	// 			Error:        res.Body.Error,
+	// 		}
+	// 		result = append(result, viewCalRes)
+	// 	}
+	// }
+
+	var responses []*calendarViewSingleResponse
+	for _, req := range requests {
+		resp, err := c.getCalenderView(req)
 		if err != nil {
 			return nil, errors.Wrap(err, "msgraph ViewCalendar batch request")
 		}
 
-		batchResponses = append(batchResponses, batchRes)
+		responses = append(responses, resp)
 	}
 
 	result := []*remote.ViewCalendarResponse{}
-	for _, batchRes := range batchResponses {
-		for _, res := range batchRes.Responses {
-			viewCalRes := &remote.ViewCalendarResponse{
-				RemoteUserID: res.ID,
-				Events:       res.Body.Value,
-				Error:        res.Body.Error,
-			}
-			result = append(result, viewCalRes)
+	for _, res := range responses {
+		viewCalRes := &remote.ViewCalendarResponse{
+			RemoteUserID: res.ID,
+			Events:       res.Value,
 		}
+		result = append(result, viewCalRes)
 	}
 
 	return result, nil

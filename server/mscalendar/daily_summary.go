@@ -135,6 +135,7 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 			RemoteUserID: storeUser.Remote.ID,
 			StartTime:    start,
 			EndTime:      end,
+			AccessToken:  storeUser.OAuth2Token,
 		}
 		requests = append(requests, req)
 	}
