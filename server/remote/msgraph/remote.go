@@ -37,17 +37,24 @@ func NewRemote(conf *config.Config, logger bot.Logger) remote.Remote {
 }
 
 // MakeClient creates a new client for user-delegated permissions.
-func (r *impl) MakeClient(ctx context.Context, poster bot.Poster, store store.Store, mattermostUserID string, token *oauth2.Token) remote.Client {
-	httpClient := r.NewOAuth2Config().Client(ctx, token)
+func (r *impl) MakeClient(ctx context.Context, token *oauth2.Token, kvstore store.Store, mattermostUserID string, checkUserStatus func() bool, changeUserStatus func(error)) remote.Client {
+	config := r.NewOAuth2Config()
+
+	token, err := store.RefreshAndStoreToken(kvstore, token, config, mattermostUserID)
+	if err != nil {
+		r.logger.Warnf("Not able to refresh the token", "error", err)
+		return &client{}
+	}
+
+	httpClient := config.Client(ctx, token)
 	c := &client{
 		conf:             r.conf,
 		ctx:              ctx,
 		httpClient:       httpClient,
 		Logger:           r.logger,
 		rbuilder:         msgraph.NewClient(httpClient),
-		store:            store,
-		mattermostUserID: mattermostUserID,
-		poster:           poster,
+		checkUserStatus:  checkUserStatus,
+		changeUserStatus: changeUserStatus,
 	}
 	return c
 }
@@ -71,7 +78,7 @@ func (r *impl) MakeSuperuserClient(ctx context.Context) (remote.Client, error) {
 		AccessToken: token,
 		TokenType:   "Bearer",
 	}
-	return r.MakeClient(ctx, nil, nil, "", o), nil
+	return r.MakeClient(ctx, o, nil, "", nil, nil), nil
 }
 
 func (r *impl) NewOAuth2Config() *oauth2.Config {

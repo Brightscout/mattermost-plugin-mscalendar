@@ -4,13 +4,23 @@
 package store
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
+	"time"
 
 	"golang.org/x/oauth2"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
+	"github.com/pkg/errors"
+)
+
+const (
+	ErrorUserInactive        = "You have been marked inactive because your refresh token is expired. Please disconnect and reconnect your account again."
+	ErrorRefreshTokenExpired = "The refresh token has expired due to inactivity"
 )
 
 type UserStore interface {
@@ -277,4 +287,80 @@ func (index UserIndex) GetMattermostUserIDs() []string {
 	}
 
 	return result
+}
+
+func GetCheckUserStatus(store Store, logger bot.Logger, mattermostUserID string) func() bool {
+	return func() bool {
+		user, err := store.LoadUser(mattermostUserID)
+		if err != nil {
+			logger.Errorf("Not able to load the user %s. %s", mattermostUserID, err.Error())
+			return false
+		}
+
+		// Checking if the user is marked as inactive
+		if user.OAuth2Token == nil {
+			return false
+		}
+
+		return true
+	}
+}
+
+func GetChangeUserStatus(store Store, logger bot.Logger, mattermostUserID string, poster bot.Poster) func(error) {
+	return func(err error) {
+		if err == nil {
+			return
+		}
+
+		if !strings.Contains(err.Error(), ErrorRefreshTokenExpired) {
+			return
+		}
+
+		user, err := store.LoadUser(mattermostUserID)
+		if err != nil {
+			return
+		}
+
+		// Marking the user as inactive
+		user.OAuth2Token = nil
+		if err = store.StoreUser(user); err != nil {
+			return
+		}
+
+		if _, err := poster.DM(mattermostUserID, ErrorUserInactive); err != nil {
+			logger.Errorf("Not able to DM the user %s. %s", mattermostUserID, err.Error())
+		}
+	}
+}
+
+// refreshAndStoreToken checks whether the current access token is expired or not. If it is,
+// then it refreshes the token and stores the new pair of access and refresh tokens in kv store.
+func RefreshAndStoreToken(store Store, token *oauth2.Token, oconf *oauth2.Config, mattermostUserID string) (*oauth2.Token, error) {
+	// If there is only five minute left for the token to expire, we are refreshing the token.
+	// We don't want the token to expire between the time when we decide that the old token is valid
+	// and the time at which we create the request. We are handling that by not letting the token expire.
+	if time.Until(token.Expiry) > 5*time.Minute {
+		return token, nil
+	}
+
+	src := oconf.TokenSource(context.Background(), token)
+	newToken, err := src.Token() // this actually goes and renews the tokens
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to get the new refreshed token")
+	}
+	if newToken.AccessToken != token.AccessToken {
+		user, err := store.LoadUser(mattermostUserID)
+		if err != nil {
+			return nil, errors.Wrap(err, "unable to get the new refreshed token")
+		}
+		user.OAuth2Token = newToken
+
+		if err := store.StoreUser(user); err != nil {
+			return nil, err
+		}
+
+		return newToken, nil
+	}
+
+	return token, nil
 }

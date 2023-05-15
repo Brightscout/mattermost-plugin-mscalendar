@@ -33,8 +33,8 @@ type calendarViewBatchResponse struct {
 func (c *client) GetDefaultCalendarView(remoteUserID string, start, end time.Time) ([]*serializer.Event, error) {
 	paramStr := getQueryParamStringForCalendarView(start, end)
 
-	if !c.CheckUserStatus() {
-		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
+	if !c.checkUserStatus() {
+		c.Logger.Warnf(LogUserInactive)
 		return nil, errors.New(ErrorUserInactive)
 	}
 
@@ -42,7 +42,7 @@ func (c *client) GetDefaultCalendarView(remoteUserID string, start, end time.Tim
 	err := c.rbuilder.Users().ID(remoteUserID).CalendarView().Request().JSONRequest(
 		c.ctx, http.MethodGet, paramStr, nil, res)
 	if err != nil {
-		c.ChangeUserStatus(err)
+		c.changeUserStatus(err)
 		return nil, errors.Wrap(err, "msgraph GetDefaultCalendarView")
 	}
 
@@ -51,8 +51,8 @@ func (c *client) GetDefaultCalendarView(remoteUserID string, start, end time.Tim
 
 func (c *client) DoBatchViewCalendarRequests(allParams []*remote.ViewCalendarParams) ([]*remote.ViewCalendarResponse, error) {
 	requests := []*singleRequest{}
-	if !c.CheckUserStatus() {
-		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
+	if !c.checkUserStatus() {
+		c.Logger.Warnf(LogUserInactive)
 		return nil, errors.New(ErrorUserInactive)
 	}
 
@@ -73,7 +73,7 @@ func (c *client) DoBatchViewCalendarRequests(allParams []*remote.ViewCalendarPar
 		batchRes := &calendarViewBatchResponse{}
 		err := c.batchRequest(req, batchRes)
 		if err != nil {
-			c.ChangeUserStatus(err)
+			c.changeUserStatus(err)
 			return nil, errors.Wrap(err, "msgraph ViewCalendar batch request")
 		}
 

@@ -71,7 +71,7 @@ func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 		return err
 	}
 
-	client := app.Remote.MakeClient(ctx, app.Poster, app.Store, mattermostUserID, tok)
+	client := app.Remote.MakeClient(ctx, tok, app.Store, mattermostUserID, store.GetCheckUserStatus(app.Store, app.Logger, mattermostUserID), store.GetChangeUserStatus(app.Store, app.Logger, mattermostUserID, app.Poster))
 	me, err := client.GetMe()
 	if err != nil {
 		return err
