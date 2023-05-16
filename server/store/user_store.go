@@ -289,15 +289,16 @@ func (index UserIndex) GetMattermostUserIDs() []string {
 	return result
 }
 
+// Get the check user status function
 func GetCheckUserStatus(store Store, logger bot.Logger, mattermostUserID string) func() bool {
 	return func() bool {
 		user, err := store.LoadUser(mattermostUserID)
 		if err != nil {
-			logger.Errorf("Not able to load the user %s. %s", mattermostUserID, err.Error())
+			logger.Errorf("Not able to load the user %s. error: %s", mattermostUserID, err.Error())
 			return false
 		}
 
-		// Checking if the user is marked as inactive
+		// Check if the user is marked as inactive
 		if user.OAuth2Token == nil {
 			return false
 		}
@@ -306,6 +307,7 @@ func GetCheckUserStatus(store Store, logger bot.Logger, mattermostUserID string)
 	}
 }
 
+// Get the change user status function
 func GetChangeUserStatus(store Store, logger bot.Logger, mattermostUserID string, poster bot.Poster) func(error) {
 	return func(err error) {
 		if err == nil {
@@ -318,17 +320,20 @@ func GetChangeUserStatus(store Store, logger bot.Logger, mattermostUserID string
 
 		user, err := store.LoadUser(mattermostUserID)
 		if err != nil {
+			logger.Errorf("Not able to load the user %s. error: %s", mattermostUserID, err.Error())
 			return
 		}
 
-		// Marking the user as inactive
+		// Mark the user as inactive
 		user.OAuth2Token = nil
 		if err = store.StoreUser(user); err != nil {
+			logger.Errorf("Not able to store the user %s. error: %s", mattermostUserID, err.Error())
 			return
 		}
 
 		if _, err := poster.DM(mattermostUserID, ErrorUserInactive); err != nil {
-			logger.Errorf("Not able to DM the user %s. %s", mattermostUserID, err.Error())
+			logger.Errorf("Not able to DM the user %s. error: %s", mattermostUserID, err.Error())
+			return
 		}
 	}
 }
@@ -336,7 +341,7 @@ func GetChangeUserStatus(store Store, logger bot.Logger, mattermostUserID string
 // refreshAndStoreToken checks whether the current access token is expired or not. If it is,
 // then it refreshes the token and stores the new pair of access and refresh tokens in kv store.
 func RefreshAndStoreToken(store Store, token *oauth2.Token, oconf *oauth2.Config, mattermostUserID string) (*oauth2.Token, error) {
-	// If there is only five minute left for the token to expire, we are refreshing the token.
+	// If there is only five minutes left for the token to expire, we are refreshing the token.
 	// We don't want the token to expire between the time when we decide that the old token is valid
 	// and the time at which we create the request. We are handling that by not letting the token expire.
 	if time.Until(token.Expiry) > 5*time.Minute {
@@ -348,15 +353,17 @@ func RefreshAndStoreToken(store Store, token *oauth2.Token, oconf *oauth2.Config
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get the new refreshed token")
 	}
+
 	if newToken.AccessToken != token.AccessToken {
 		user, err := store.LoadUser(mattermostUserID)
 		if err != nil {
-			return nil, errors.Wrap(err, "unable to get the new refreshed token")
+			return nil, errors.Wrap(err, "unable to load the user")
 		}
+
 		user.OAuth2Token = newToken
 
 		if err := store.StoreUser(user); err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "unable to store the user")
 		}
 
 		return newToken, nil
