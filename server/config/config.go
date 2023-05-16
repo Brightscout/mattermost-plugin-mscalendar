@@ -9,8 +9,9 @@ type StoredConfig struct {
 	OAuth2ClientID     string
 	OAuth2ClientSecret string
 	bot.Config
-	EnableStatusSync   bool
-	EnableDailySummary bool
+	EnableStatusSync        bool
+	EnableDailySummary      bool
+	UseDelegatedPermissions bool
 }
 
 // Config represents the the metadata handed to all request runners (command,

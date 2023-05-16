@@ -89,6 +89,12 @@
                 "help_text": "Microsoft Office Client Secret.",
                 "placeholder": "",
                 "default": ""
+            },
+            {
+                "key": "UseDelegatedPermissions",
+                "display_name": "Use Delegated Permissions:",
+                "type": "bool",
+                "default": false
             }
         ]
     }
