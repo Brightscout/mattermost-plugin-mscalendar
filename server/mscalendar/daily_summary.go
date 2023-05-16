@@ -18,7 +18,7 @@ import (
 const dailySummaryTimeWindow = time.Minute * 2
 
 // Run daily summary job every 15 minutes
-const DailySummaryJobInterval = 15 * time.Minute
+const DailySummaryJobInterval = 1 * time.Minute
 
 type DailySummary interface {
 	GetDailySummaryForUser(user *User) (string, error)
@@ -121,14 +121,14 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 			continue
 		}
 
-		shouldPost, shouldPostErr := shouldPostDailySummary(dsum, now)
-		if shouldPostErr != nil {
-			m.Logger.Warnf("Error posting daily summary for user %s. err=%v", user.MattermostUserID, shouldPostErr)
-			continue
-		}
-		if !shouldPost {
-			continue
-		}
+		// shouldPost, shouldPostErr := shouldPostDailySummary(dsum, now)
+		// if shouldPostErr != nil {
+		// 	m.Logger.Warnf("Error posting daily summary for user %s. err=%v", user.MattermostUserID, shouldPostErr)
+		// 	continue
+		// }
+		// if !shouldPost {
+		// 	continue
+		// }
 
 		start, end := getTodayHoursForTimezone(now, dsum.Timezone)
 		req := &remote.ViewCalendarParams{

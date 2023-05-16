@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
 
 	"github.com/pkg/errors"
@@ -114,18 +115,40 @@ func (c *client) DoBatchViewCalendarRequests(allParams []*remote.ViewCalendarPar
 	// 	}
 	// }
 
-	var responses []*calendarViewSingleResponse
-	for _, req := range requests {
-		resp, err := c.getCalenderView(req)
-		if err != nil {
-			return nil, errors.Wrap(err, "msgraph ViewCalendar batch request")
-		}
-
-		responses = append(responses, resp)
+	var wg = &sync.WaitGroup{}
+	maxGoroutines := 4
+	guard := make(chan struct{}, maxGoroutines)
+	responses := make(chan *calendarViewSingleResponse, len(requests))
+	for i, req := range requests {
+		guard <- struct{}{} // stops execution if the channel is full
+		wg.Add(1)
+		go func(n int, wg *sync.WaitGroup, req *singleRequest, guard chan struct{}, responses chan *calendarViewSingleResponse) {
+			resp, err := c.getCalenderView(req)
+			if err != nil {
+				fmt.Printf("\n\n\nerrr: %+v\n\n\n", err)
+			}
+			<-guard
+			responses <- resp
+			wg.Done()
+		}(i, wg, req, guard, responses)
 	}
+	fmt.Printf("\n\n\nheree -44\n\n\n")
+
+	wg.Wait()
+	close(responses)
+	close(guard)
+	// var responses []*calendarViewSingleResponse
+	// for _, req := range requests {
+	// 	resp, err := c.getCalenderView(req)
+	// 	if err != nil {
+	// 		return nil, errors.Wrap(err, "msgraph ViewCalendar batch request")
+	// 	}
+
+	// 	responses = append(responses, resp)
+	// }
 
 	result := []*remote.ViewCalendarResponse{}
-	for _, res := range responses {
+	for res := range responses {
 		viewCalRes := &remote.ViewCalendarResponse{
 			RemoteUserID: res.ID,
 			Events:       res.Value,
