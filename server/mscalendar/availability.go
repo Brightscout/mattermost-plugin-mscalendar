@@ -398,6 +398,7 @@ func (m *mscalendar) GetCalendarViews(users []*store.User) ([]*remote.ViewCalend
 			RemoteUserID: u.Remote.ID,
 			StartTime:    start,
 			EndTime:      end,
+			AccessToken:  u.OAuth2Token,
 		})
 	}
 

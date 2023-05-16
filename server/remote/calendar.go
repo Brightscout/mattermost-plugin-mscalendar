@@ -5,6 +5,8 @@ package remote
 
 import (
 	"time"
+
+	"golang.org/x/oauth2"
 )
 
 type Calendar struct {
@@ -19,6 +21,7 @@ type ViewCalendarParams struct {
 	StartTime    time.Time
 	EndTime      time.Time
 	RemoteUserID string
+	AccessToken  *oauth2.Token
 }
 
 type ViewCalendarResponse struct {

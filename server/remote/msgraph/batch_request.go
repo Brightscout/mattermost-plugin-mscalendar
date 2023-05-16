@@ -5,16 +5,19 @@ package msgraph
 
 import (
 	"net/http"
+
+	"golang.org/x/oauth2"
 )
 
 const maxNumRequestsPerBatch = 20
 
 type singleRequest struct {
-	Body    interface{}       `json:"body"`
-	Headers map[string]string `json:"headers"`
-	ID      string            `json:"id"`
-	URL     string            `json:"url"`
-	Method  string            `json:"method"`
+	Body        interface{}       `json:"body"`
+	Headers     map[string]string `json:"headers"`
+	ID          string            `json:"id"`
+	URL         string            `json:"url"`
+	Method      string            `json:"method"`
+	AccessToken *oauth2.Token
 }
 
 type fullBatchRequest struct {
