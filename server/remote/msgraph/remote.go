@@ -42,7 +42,7 @@ func (r *impl) MakeClient(ctx context.Context, token *oauth2.Token, kvstore stor
 
 	token, err := store.RefreshAndStoreToken(kvstore, token, config, mattermostUserID)
 	if err != nil {
-		r.logger.Warnf("Not able to refresh or store the token", "error", err)
+		r.logger.Warnf("Not able to refresh or store the token", "error", err.Error())
 		return &client{}
 	}
 
