@@ -43,8 +43,8 @@ type getScheduleRequestParams struct {
 }
 
 func (c *client) GetSchedule(requests []*remote.ScheduleUserInfo, startTime, endTime *serializer.DateTime, availabilityViewInterval int) ([]*remote.ScheduleInformation, error) {
-	if !c.tokenHelpers.CheckUserStatus() {
-		c.Logger.Warnf(LogUserInactive)
+	if c.tokenHelpers != nil && !c.tokenHelpers.CheckUserStatus(c.Logger, c.mattermostUserID) {
+		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
 		return nil, errors.New(ErrorUserInactive)
 	}
 
@@ -66,7 +66,7 @@ func (c *client) GetSchedule(requests []*remote.ScheduleUserInfo, startTime, end
 		res := &getScheduleBatchResponse{}
 		err := c.batchRequest(req, res)
 		if err != nil {
-			c.tokenHelpers.ChangeUserStatus(err)
+			c.tokenHelpers.ChangeUserStatus(err, c.Logger, c.mattermostUserID, c.Poster)
 			return nil, errors.Wrap(err, "msgraph batch GetSchedule")
 		}
 

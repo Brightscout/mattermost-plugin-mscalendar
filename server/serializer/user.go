@@ -1,6 +1,9 @@
 package serializer
 
-import "golang.org/x/oauth2"
+import (
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
+	"golang.org/x/oauth2"
+)
 
 type User struct {
 	ID                string `json:"id"`
@@ -10,7 +13,7 @@ type User struct {
 }
 
 type UserTokenHelpers struct {
-	CheckUserStatus      func() bool
-	ChangeUserStatus     func(error)
+	CheckUserStatus      func(logger bot.Logger, mattermostUserID string) bool
+	ChangeUserStatus     func(err error, logger bot.Logger, mattermostUserID string, poster bot.Poster)
 	RefreshAndStoreToken func(token *oauth2.Token, oconf *oauth2.Config, mattermostUserID string) (*oauth2.Token, error)
 }

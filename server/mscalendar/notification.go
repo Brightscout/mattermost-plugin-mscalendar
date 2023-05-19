@@ -141,18 +141,12 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 	n.Subscription = sub.Remote
 	n.SubscriptionCreator = creator.Remote
 
-	makeCheckUserStatus := store.MakeCheckUserStatus(processor.Store, processor.Logger, sub.MattermostCreatorID)
-	makeChangeUserStatus := store.MakeChangeUserStatus(processor.Store, processor.Logger, sub.MattermostCreatorID, processor.Poster)
-
 	tokenHelpers := &serializer.UserTokenHelpers{
-		CheckUserStatus:      makeCheckUserStatus,
-		ChangeUserStatus:     makeChangeUserStatus,
+		CheckUserStatus:      processor.Store.MakeCheckUserStatus,
+		ChangeUserStatus:     processor.Store.MakeChangeUserStatus,
 		RefreshAndStoreToken: processor.Store.RefreshAndStoreToken,
 	}
-fmt.Printf("\n\n\nhere\n\n\n")
-	// fmt.Print("\n tokenHelpers=", &tokenHelpers.RefreshAndStoreToken)
-	client := processor.Remote.MakeUserClient(context.Background(), creator.OAuth2Token, sub.MattermostCreatorID, tokenHelpers)
-	fmt.Printf("\n\n\nhere2\n\n\n")
+	client := processor.Remote.MakeUserClient(context.Background(), creator.OAuth2Token, sub.MattermostCreatorID, processor.Poster, tokenHelpers)
 
 	if n.RecommendRenew {
 		var renewed *serializer.Subscription

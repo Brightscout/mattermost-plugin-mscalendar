@@ -72,12 +72,13 @@ func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 		return err
 	}
 
-	makeCheckUserStatus := store.MakeCheckUserStatus(app.Store, app.Logger, mattermostUserID)
-	makeChangeUserStatus := store.MakeChangeUserStatus(app.Store, app.Logger, mattermostUserID, app.Poster)
-	client := app.Remote.MakeClient(ctx, tok, &serializer.UserTokenHelpers{
-		CheckUserStatus:  makeCheckUserStatus,
-		ChangeUserStatus: makeChangeUserStatus,
-	})
+	tokenHelpers := &serializer.UserTokenHelpers{
+		CheckUserStatus:      app.Store.MakeCheckUserStatus,
+		ChangeUserStatus:     app.Store.MakeChangeUserStatus,
+		RefreshAndStoreToken: app.Store.RefreshAndStoreToken,
+	}
+
+	client := app.Remote.MakeClient(ctx, tok, mattermostUserID, app.Poster, tokenHelpers)
 	me, err := client.GetMe()
 	if err != nil {
 		return err

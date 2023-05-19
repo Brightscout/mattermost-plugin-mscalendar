@@ -35,6 +35,8 @@ type UserStore interface {
 	DeleteUserFromIndex(mattermostUserID string) error
 	StoreUserActiveEvents(mattermostUserID string, events []string) error
 	RefreshAndStoreToken(token *oauth2.Token, oconf *oauth2.Config, mattermostUserID string) (*oauth2.Token, error)
+	MakeCheckUserStatus(logger bot.Logger, mattermostUserID string) bool
+	MakeChangeUserStatus(err error, logger bot.Logger, mattermostUserID string, poster bot.Poster)
 }
 
 type UserIndex []*UserShort
@@ -284,6 +286,51 @@ func (s *pluginStore) RefreshAndStoreToken(token *oauth2.Token, oconf *oauth2.Co
 	return token, nil
 }
 
+// Make the check user status function
+func (s *pluginStore) MakeCheckUserStatus(logger bot.Logger, mattermostUserID string) bool {
+	user, err := s.LoadUser(mattermostUserID)
+	if err != nil {
+		logger.Errorf("Not able to load the user %s. error: %s", mattermostUserID, err.Error())
+		return false
+	}
+
+	// Check if the user is marked as inactive
+	if user.OAuth2Token == nil {
+		return false
+	}
+
+	return true
+}
+
+// Make the change user status function
+func (s *pluginStore) MakeChangeUserStatus(err error, logger bot.Logger, mattermostUserID string, poster bot.Poster) {
+	if err == nil {
+		return
+	}
+
+	if !strings.Contains(err.Error(), ErrorRefreshTokenExpired) {
+		return
+	}
+
+	user, err := s.LoadUser(mattermostUserID)
+	if err != nil {
+		logger.Errorf("Not able to load the user %s. error: %s", mattermostUserID, err.Error())
+		return
+	}
+
+	// Mark the user as inactive
+	user.OAuth2Token = nil
+	if err = s.StoreUser(user); err != nil {
+		logger.Errorf("Not able to store the user %s. error: %s", mattermostUserID, err.Error())
+		return
+	}
+
+	if _, err := poster.DM(mattermostUserID, ErrorUserInactive); err != nil {
+		logger.Errorf("Not able to DM the user %s. error: %s", mattermostUserID, err.Error())
+		return
+	}
+}
+
 func (index UserIndex) ByMattermostID() map[string]*UserShort {
 	result := map[string]*UserShort{}
 
@@ -322,53 +369,4 @@ func (index UserIndex) GetMattermostUserIDs() []string {
 	}
 
 	return result
-}
-
-// Make the check user status function
-func MakeCheckUserStatus(store Store, logger bot.Logger, mattermostUserID string) func() bool {
-	return func() bool {
-		user, err := store.LoadUser(mattermostUserID)
-		if err != nil {
-			logger.Errorf("Not able to load the user %s. error: %s", mattermostUserID, err.Error())
-			return false
-		}
-
-		// Check if the user is marked as inactive
-		if user.OAuth2Token == nil {
-			return false
-		}
-
-		return true
-	}
-}
-
-// Make the change user status function
-func MakeChangeUserStatus(store Store, logger bot.Logger, mattermostUserID string, poster bot.Poster) func(error) {
-	return func(err error) {
-		if err == nil {
-			return
-		}
-
-		if !strings.Contains(err.Error(), ErrorRefreshTokenExpired) {
-			return
-		}
-
-		user, err := store.LoadUser(mattermostUserID)
-		if err != nil {
-			logger.Errorf("Not able to load the user %s. error: %s", mattermostUserID, err.Error())
-			return
-		}
-
-		// Mark the user as inactive
-		user.OAuth2Token = nil
-		if err = store.StoreUser(user); err != nil {
-			logger.Errorf("Not able to store the user %s. error: %s", mattermostUserID, err.Error())
-			return
-		}
-
-		if _, err := poster.DM(mattermostUserID, ErrorUserInactive); err != nil {
-			logger.Errorf("Not able to DM the user %s. error: %s", mattermostUserID, err.Error())
-			return
-		}
-	}
 }

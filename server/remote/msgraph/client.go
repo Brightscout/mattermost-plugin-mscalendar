@@ -22,7 +22,10 @@ type client struct {
 	httpClient *http.Client
 	rbuilder   *msgraph.GraphServiceRequestBuilder
 
-	conf *config.Config
+	mattermostUserID string
+	conf             *config.Config
+	tokenHelpers     *serializer.UserTokenHelpers
+
 	bot.Logger
-	tokenHelpers *serializer.UserTokenHelpers
+	bot.Poster
 }

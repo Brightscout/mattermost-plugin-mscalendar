@@ -16,8 +16,8 @@ import (
 func (c *client) GetNotificationData(orig *remote.Notification) (*remote.Notification, error) {
 	n := *orig
 	wh := n.Webhook.(*webhook)
-	if !c.tokenHelpers.CheckUserStatus() {
-		c.Logger.Warnf(LogUserInactive)
+	if c.tokenHelpers != nil && !c.tokenHelpers.CheckUserStatus(c.Logger, c.mattermostUserID) {
+		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
 		return nil, errors.New(ErrorUserInactive)
 	}
 
@@ -26,7 +26,7 @@ func (c *client) GetNotificationData(orig *remote.Notification) (*remote.Notific
 		event := serializer.Event{}
 		_, err := c.CallJSON(http.MethodGet, wh.Resource, nil, &event)
 		if err != nil {
-			c.tokenHelpers.ChangeUserStatus(err)
+			c.tokenHelpers.ChangeUserStatus(err, c.Logger, c.mattermostUserID, c.Poster)
 			c.Logger.With(bot.LogContext{
 				"Resource":       wh.Resource,
 				"subscriptionID": wh.SubscriptionID,
