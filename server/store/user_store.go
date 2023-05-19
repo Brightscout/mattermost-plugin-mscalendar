@@ -34,6 +34,7 @@ type UserStore interface {
 	StoreUserInIndex(user *User) error
 	DeleteUserFromIndex(mattermostUserID string) error
 	StoreUserActiveEvents(mattermostUserID string, events []string) error
+	RefreshAndStoreToken(token *oauth2.Token, oconf *oauth2.Config, mattermostUserID string) (*oauth2.Token, error)
 }
 
 type UserIndex []*UserShort
@@ -249,6 +250,40 @@ func (s *pluginStore) StoreUserActiveEvents(mattermostUserID string, events []st
 	return kvstore.StoreJSON(s.userKV, mattermostUserID, u)
 }
 
+// RefreshAndStoreToken checks whether the current access token is expired or not. If it is,
+// then it refreshes the token and stores the new pair of access and refresh tokens in kv store.
+func (s *pluginStore) RefreshAndStoreToken(token *oauth2.Token, oconf *oauth2.Config, mattermostUserID string) (*oauth2.Token, error) {
+	// If there are only five minutes left for the token to expire, we are refreshing the token.
+	// We don't want the token to expire between the time when we decide that the old token is valid
+	// and the time at which we create the request. We are handling that by not letting the token expire.
+	if time.Until(token.Expiry) > 5*time.Minute {
+		return token, nil
+	}
+
+	src := oconf.TokenSource(context.Background(), token)
+	newToken, err := src.Token() // this actually goes and renews the tokens
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to get the new refreshed token")
+	}
+
+	if newToken.AccessToken != token.AccessToken || newToken.RefreshToken != token.RefreshToken {
+		user, err := s.LoadUser(mattermostUserID)
+		if err != nil {
+			return nil, errors.Wrap(err, "unable to load the user")
+		}
+
+		user.OAuth2Token = newToken
+
+		if err := s.StoreUser(user); err != nil {
+			return nil, errors.Wrap(err, "unable to store the user")
+		}
+
+		return newToken, nil
+	}
+
+	return token, nil
+}
+
 func (index UserIndex) ByMattermostID() map[string]*UserShort {
 	result := map[string]*UserShort{}
 
@@ -289,8 +324,8 @@ func (index UserIndex) GetMattermostUserIDs() []string {
 	return result
 }
 
-// Get the check user status function
-func GetCheckUserStatus(store Store, logger bot.Logger, mattermostUserID string) func() bool {
+// Make the check user status function
+func MakeCheckUserStatus(store Store, logger bot.Logger, mattermostUserID string) func() bool {
 	return func() bool {
 		user, err := store.LoadUser(mattermostUserID)
 		if err != nil {
@@ -307,8 +342,8 @@ func GetCheckUserStatus(store Store, logger bot.Logger, mattermostUserID string)
 	}
 }
 
-// Get the change user status function
-func GetChangeUserStatus(store Store, logger bot.Logger, mattermostUserID string, poster bot.Poster) func(error) {
+// Make the change user status function
+func MakeChangeUserStatus(store Store, logger bot.Logger, mattermostUserID string, poster bot.Poster) func(error) {
 	return func(err error) {
 		if err == nil {
 			return
@@ -336,38 +371,4 @@ func GetChangeUserStatus(store Store, logger bot.Logger, mattermostUserID string
 			return
 		}
 	}
-}
-
-// refreshAndStoreToken checks whether the current access token is expired or not. If it is,
-// then it refreshes the token and stores the new pair of access and refresh tokens in kv store.
-func RefreshAndStoreToken(store Store, token *oauth2.Token, oconf *oauth2.Config, mattermostUserID string) (*oauth2.Token, error) {
-	// If there is only five minutes left for the token to expire, we are refreshing the token.
-	// We don't want the token to expire between the time when we decide that the old token is valid
-	// and the time at which we create the request. We are handling that by not letting the token expire.
-	if time.Until(token.Expiry) > 5*time.Minute {
-		return token, nil
-	}
-
-	src := oconf.TokenSource(context.Background(), token)
-	newToken, err := src.Token() // this actually goes and renews the tokens
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to get the new refreshed token")
-	}
-
-	if newToken.AccessToken != token.AccessToken {
-		user, err := store.LoadUser(mattermostUserID)
-		if err != nil {
-			return nil, errors.Wrap(err, "unable to load the user")
-		}
-
-		user.OAuth2Token = newToken
-
-		if err := store.StoreUser(user); err != nil {
-			return nil, errors.Wrap(err, "unable to store the user")
-		}
-
-		return newToken, nil
-	}
-
-	return token, nil
 }

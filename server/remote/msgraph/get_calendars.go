@@ -16,7 +16,7 @@ func (c *client) GetCalendars(remoteUserID string) ([]*remote.Calendar, error) {
 	var v struct {
 		Value []*remote.Calendar `json:"value"`
 	}
-	if !c.checkUserStatus() {
+	if !c.tokenHelpers.CheckUserStatus() {
 		c.Logger.Warnf(LogUserInactive)
 		return nil, errors.New(ErrorUserInactive)
 	}
@@ -25,7 +25,7 @@ func (c *client) GetCalendars(remoteUserID string) ([]*remote.Calendar, error) {
 	req.Expand("children")
 	err := req.JSONRequest(c.ctx, http.MethodGet, "", nil, &v)
 	if err != nil {
-		c.changeUserStatus(err)
+		c.tokenHelpers.ChangeUserStatus(err)
 		return nil, errors.Wrap(err, "msgraph GetCalendars")
 	}
 	c.Logger.With(bot.LogContext{

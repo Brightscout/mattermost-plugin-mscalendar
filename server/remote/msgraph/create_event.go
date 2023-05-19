@@ -14,14 +14,14 @@ import (
 // CreateEvent creates a calendar event
 func (c *client) CreateEvent(remoteUserID string, in *serializer.Event) (*serializer.Event, error) {
 	var out = serializer.Event{}
-	if !c.checkUserStatus() {
+	if !c.tokenHelpers.CheckUserStatus() {
 		c.Logger.Warnf(LogUserInactive)
 		return nil, errors.New(ErrorUserInactive)
 	}
 
 	err := c.rbuilder.Users().ID(remoteUserID).Events().Request().JSONRequest(c.ctx, http.MethodPost, "", &in, &out)
 	if err != nil {
-		c.changeUserStatus(err)
+		c.tokenHelpers.ChangeUserStatus(err)
 		return nil, errors.Wrap(err, "msgraph CreateEvent")
 	}
 	return &out, nil

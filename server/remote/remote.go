@@ -10,12 +10,13 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
 type Remote interface {
-	MakeClient(context.Context, *oauth2.Token, store.Store, string, func() bool, func(error)) Client
+	MakeClient(context.Context, *oauth2.Token, *serializer.UserTokenHelpers) Client
+	MakeUserClient(context.Context, *oauth2.Token, string, *serializer.UserTokenHelpers) Client
 	MakeSuperuserClient(ctx context.Context) (Client, error)
 	NewOAuth2Config() *oauth2.Config
 	HandleWebhook(http.ResponseWriter, *http.Request) []*Notification

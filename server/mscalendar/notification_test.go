@@ -5,6 +5,7 @@ package mscalendar
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -151,11 +152,24 @@ func TestProcessNotification(t *testing.T) {
 			mockStore.EXPECT().LoadUser("creator_mm_id").Return(user, nil).Times(1)
 
 			if tc.notification.ClientState == subscription.Remote.ClientState {
-				mockRemote.EXPECT().MakeClient(context.Background(), &oauth2.Token{
-					AccessToken: "creator_oauth_token",
-				}, mockStore, "creator_mm_id", gomock.Any(), gomock.Any()).Return(mockClient).Times(1)
-				mockClient.EXPECT().GetMailboxSettings(user.Remote.ID).Return(&remote.MailboxSettings{TimeZone: "Eastern Standard Time"}, nil)
 
+				makeCheckUserStatus := store.MakeCheckUserStatus(mockStore, &bot.NilLogger{}, "creator_mm_id")
+				makeChangeUserStatus := store.MakeChangeUserStatus(mockStore, &bot.NilLogger{}, "creator_mm_id", mockPoster)
+				tokenHelpers := &serializer.UserTokenHelpers{
+					CheckUserStatus:      makeCheckUserStatus,
+					ChangeUserStatus:     makeChangeUserStatus,
+					//RefreshAndStoreToken: mockStore.RefreshAndStoreToken,
+				}
+
+				fmt.Printf("\n testcase token=%v", tokenHelpers)
+				mockRemote.EXPECT().MakeUserClient(context.Background(), &oauth2.Token{
+					AccessToken: "creator_oauth_token",
+				}, "creator_mm_id", tokenHelpers)
+
+				/*mockRemote.EXPECT().MakeClient(context.Background(), &oauth2.Token{
+					AccessToken: "creator_oauth_token",
+				}, mockStore, "creator_mm_id", gomock.Any(), gomock.Any()).Return(mockClient).Times(1)*/
+				mockClient.EXPECT().GetMailboxSettings(user.Remote.ID).Return(&remote.MailboxSettings{TimeZone: "Eastern Standard Time"}, nil)
 				if tc.notification.RecommendRenew {
 					mockClient.EXPECT().RenewSubscription("remote_subscription_id").Return(&serializer.Subscription{}, nil).Times(1)
 					mockStore.EXPECT().StoreUserSubscription(user, &store.Subscription{

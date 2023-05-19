@@ -11,7 +11,7 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	remote "github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
-	store "github.com/mattermost/mattermost-plugin-mscalendar/server/store"
+	serializer "github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 	oauth2 "golang.org/x/oauth2"
 )
 
@@ -53,17 +53,17 @@ func (mr *MockRemoteMockRecorder) HandleWebhook(arg0, arg1 interface{}) *gomock.
 }
 
 // MakeClient mocks base method.
-func (m *MockRemote) MakeClient(arg0 context.Context, arg1 *oauth2.Token, arg2 store.Store, arg3 string, arg4 func() bool, arg5 func(error)) remote.Client {
+func (m *MockRemote) MakeClient(arg0 context.Context, arg1 *oauth2.Token, arg2 *serializer.UserTokenHelpers) remote.Client {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "MakeClient", arg0, arg1, arg2, arg3, arg4, arg5)
+	ret := m.ctrl.Call(m, "MakeClient", arg0, arg1, arg2)
 	ret0, _ := ret[0].(remote.Client)
 	return ret0
 }
 
 // MakeClient indicates an expected call of MakeClient.
-func (mr *MockRemoteMockRecorder) MakeClient(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
+func (mr *MockRemoteMockRecorder) MakeClient(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MakeClient", reflect.TypeOf((*MockRemote)(nil).MakeClient), arg0, arg1, arg2, arg3, arg4, arg5)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MakeClient", reflect.TypeOf((*MockRemote)(nil).MakeClient), arg0, arg1, arg2)
 }
 
 // MakeSuperuserClient mocks base method.
@@ -73,6 +73,20 @@ func (m *MockRemote) MakeSuperuserClient(arg0 context.Context) (remote.Client, e
 	ret0, _ := ret[0].(remote.Client)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
+}
+
+// MakeUserClient mocks base method.
+func (m *MockRemote) MakeUserClient(arg0 context.Context, arg1 *oauth2.Token, arg2 string, arg3 *serializer.UserTokenHelpers) remote.Client {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "MakeUserClient", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(remote.Client)
+	return ret0
+}
+
+// MakeUserClient indicates an expected call of MakeUserClient.
+func (mr *MockRemoteMockRecorder) MakeUserClient(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MakeUserClient", reflect.TypeOf((*MockRemote)(nil).MakeUserClient), arg0, arg1, arg2, arg3)
 }
 
 // MakeSuperuserClient indicates an expected call of MakeSuperuserClient.

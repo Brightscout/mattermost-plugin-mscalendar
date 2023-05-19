@@ -10,6 +10,7 @@ import (
 	msgraph "github.com/yaegashi/msgraph.go/v1.0"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
@@ -23,7 +24,5 @@ type client struct {
 
 	conf *config.Config
 	bot.Logger
-
-	checkUserStatus  func() bool
-	changeUserStatus func(error)
+	tokenHelpers *serializer.UserTokenHelpers
 }

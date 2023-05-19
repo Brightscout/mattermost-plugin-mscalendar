@@ -9,6 +9,7 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	store "github.com/mattermost/mattermost-plugin-mscalendar/server/store"
+	oauth2 "golang.org/x/oauth2"
 )
 
 // MockStore is a mock of Store interface.
@@ -436,6 +437,21 @@ func (m *MockStore) StoreUserActiveEvents(arg0 string, arg1 []string) error {
 func (mr *MockStoreMockRecorder) StoreUserActiveEvents(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StoreUserActiveEvents", reflect.TypeOf((*MockStore)(nil).StoreUserActiveEvents), arg0, arg1)
+}
+
+// RefreshAndStoreToken mocks base method
+func (m *MockStore) RefreshAndStoreToken(arg0 *oauth2.Token, arg1 *oauth2.Config, arg2 string) (*oauth2.Token, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RefreshAndStoreToken", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*oauth2.Token)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RefreshAndStoreToken indicates an expected call of RefreshAndStoreToken
+func (mr *MockStoreMockRecorder) RefreshAndStoreToken(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RefreshAndStoreToken", reflect.TypeOf((*MockStore)(nil).RefreshAndStoreToken), arg0, arg1, arg2)
 }
 
 // StoreUserEvent mocks base method.
