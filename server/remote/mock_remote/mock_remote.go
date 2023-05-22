@@ -8,7 +8,6 @@ import (
 	context "context"
 	gomock "github.com/golang/mock/gomock"
 	remote "github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
-	serializer "github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 	bot "github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	oauth2 "golang.org/x/oauth2"
 	http "net/http"
@@ -53,7 +52,7 @@ func (mr *MockRemoteMockRecorder) HandleWebhook(arg0, arg1 interface{}) *gomock.
 }
 
 // MakeClient mocks base method
-func (m *MockRemote) MakeClient(arg0 context.Context, arg1 *oauth2.Token, arg2 string, arg3 bot.Poster, arg4 *serializer.UserTokenHelpers) remote.Client {
+func (m *MockRemote) MakeClient(arg0 context.Context, arg1 *oauth2.Token, arg2 string, arg3 bot.Poster, arg4 *remote.UserTokenHelpers) remote.Client {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "MakeClient", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(remote.Client)
@@ -82,7 +81,7 @@ func (mr *MockRemoteMockRecorder) MakeSuperuserClient(arg0 interface{}) *gomock.
 }
 
 // MakeUserClient mocks base method
-func (m *MockRemote) MakeUserClient(arg0 context.Context, arg1 *oauth2.Token, arg2 string, arg3 bot.Poster, arg4 *serializer.UserTokenHelpers) remote.Client {
+func (m *MockRemote) MakeUserClient(arg0 context.Context, arg1 *oauth2.Token, arg2 string, arg3 bot.Poster, arg4 *remote.UserTokenHelpers) remote.Client {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "MakeUserClient", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(remote.Client)

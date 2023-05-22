@@ -10,7 +10,7 @@ import (
 	msgraph "github.com/yaegashi/msgraph.go/v1.0"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
@@ -24,7 +24,7 @@ type client struct {
 
 	mattermostUserID string
 	conf             *config.Config
-	tokenHelpers     *serializer.UserTokenHelpers
+	tokenHelpers     *remote.UserTokenHelpers
 
 	bot.Logger
 	bot.Poster

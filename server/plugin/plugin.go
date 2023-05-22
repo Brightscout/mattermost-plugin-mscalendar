@@ -167,7 +167,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 
 		e.Dependencies.Poster = e.bot
 		e.Dependencies.Welcomer = mscalendarBot
-		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot, e.Dependencies.Tracker)
+		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot, e.bot, e.Dependencies.Tracker)
 		e.Dependencies.SettingsPanel = mscalendar.NewSettingsPanel(
 			e.bot,
 			e.Dependencies.Store,

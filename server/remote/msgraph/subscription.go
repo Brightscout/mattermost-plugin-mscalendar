@@ -31,14 +31,14 @@ func (c *client) CreateMySubscription(notificationURL string) (*serializer.Subsc
 		ExpirationDateTime: time.Now().Add(subscribeTTL).Format(time.RFC3339),
 		ClientState:        newRandomString(),
 	}
-	if c.tokenHelpers != nil && !c.tokenHelpers.CheckUserStatus(c.Logger, c.mattermostUserID) {
+	if !c.tokenHelpers.CheckUserStatus(c.mattermostUserID) {
 		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
 		return nil, errors.New(ErrorUserInactive)
 	}
 
 	err := c.rbuilder.Subscriptions().Request().JSONRequest(c.ctx, http.MethodPost, "", sub, sub)
 	if err != nil {
-		c.tokenHelpers.ChangeUserStatus(err, c.Logger, c.mattermostUserID, c.Poster)
+		c.tokenHelpers.ChangeUserStatus(err, c.mattermostUserID)
 		return nil, errors.Wrap(err, "msgraph CreateMySubscription")
 	}
 
@@ -53,13 +53,13 @@ func (c *client) CreateMySubscription(notificationURL string) (*serializer.Subsc
 }
 
 func (c *client) DeleteSubscription(subscriptionID string) error {
-	if c.tokenHelpers != nil && !c.tokenHelpers.CheckUserStatus(c.Logger, c.mattermostUserID) {
+	if !c.tokenHelpers.CheckUserStatus(c.mattermostUserID) {
 		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
 		return errors.New(ErrorUserInactive)
 	}
 	err := c.rbuilder.Subscriptions().ID(subscriptionID).Request().Delete(c.ctx)
 	if err != nil {
-		c.tokenHelpers.ChangeUserStatus(err, c.Logger, c.mattermostUserID, c.Poster)
+		c.tokenHelpers.ChangeUserStatus(err, c.mattermostUserID)
 		return errors.Wrap(err, "msgraph DeleteSubscription")
 	}
 
@@ -71,7 +71,7 @@ func (c *client) DeleteSubscription(subscriptionID string) error {
 }
 
 func (c *client) RenewSubscription(subscriptionID string) (*serializer.Subscription, error) {
-	if c.tokenHelpers != nil && !c.tokenHelpers.CheckUserStatus(c.Logger, c.mattermostUserID) {
+	if !c.tokenHelpers.CheckUserStatus(c.mattermostUserID) {
 		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
 		return nil, errors.New(ErrorUserInactive)
 	}
@@ -85,7 +85,7 @@ func (c *client) RenewSubscription(subscriptionID string) (*serializer.Subscript
 	sub := serializer.Subscription{}
 	err := c.rbuilder.Subscriptions().ID(subscriptionID).Request().JSONRequest(c.ctx, http.MethodPatch, "", v, &sub)
 	if err != nil {
-		c.tokenHelpers.ChangeUserStatus(err, c.Logger, c.mattermostUserID, c.Poster)
+		c.tokenHelpers.ChangeUserStatus(err, c.mattermostUserID)
 		return nil, errors.Wrap(err, "msgraph RenewSubscription")
 	}
 
@@ -101,14 +101,14 @@ func (c *client) ListSubscriptions() ([]*serializer.Subscription, error) {
 	var v struct {
 		Value []*serializer.Subscription `json:"value"`
 	}
-	if c.tokenHelpers != nil && !c.tokenHelpers.CheckUserStatus(c.Logger, c.mattermostUserID) {
+	if !c.tokenHelpers.CheckUserStatus(c.mattermostUserID) {
 		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
 		return nil, errors.New(ErrorUserInactive)
 	}
 
 	err := c.rbuilder.Subscriptions().Request().JSONRequest(c.ctx, http.MethodGet, "", nil, &v)
 	if err != nil {
-		c.tokenHelpers.ChangeUserStatus(err, c.Logger, c.mattermostUserID, c.Poster)
+		c.tokenHelpers.ChangeUserStatus(err, c.mattermostUserID)
 		return nil, errors.Wrap(err, "msgraph ListSubscriptions")
 	}
 	return v.Value, nil

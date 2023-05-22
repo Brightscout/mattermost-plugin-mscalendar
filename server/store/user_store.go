@@ -14,7 +14,6 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
 )
 
@@ -35,8 +34,8 @@ type UserStore interface {
 	DeleteUserFromIndex(mattermostUserID string) error
 	StoreUserActiveEvents(mattermostUserID string, events []string) error
 	RefreshAndStoreToken(token *oauth2.Token, oconf *oauth2.Config, mattermostUserID string) (*oauth2.Token, error)
-	MakeCheckUserStatus(logger bot.Logger, mattermostUserID string) bool
-	MakeChangeUserStatus(err error, logger bot.Logger, mattermostUserID string, poster bot.Poster)
+	CheckUserConnected(mattermostUserID string) bool
+	DisconnectUserFromStoreIfNecessary(err error, mattermostUserID string)
 }
 
 type UserIndex []*UserShort
@@ -286,11 +285,10 @@ func (s *pluginStore) RefreshAndStoreToken(token *oauth2.Token, oconf *oauth2.Co
 	return token, nil
 }
 
-// Make the check user status function
-func (s *pluginStore) MakeCheckUserStatus(logger bot.Logger, mattermostUserID string) bool {
+func (s *pluginStore) CheckUserConnected(mattermostUserID string) bool {
 	user, err := s.LoadUser(mattermostUserID)
 	if err != nil {
-		logger.Errorf("Not able to load the user %s. error: %s", mattermostUserID, err.Error())
+		s.Logger.Errorf("Not able to load the user %s. error: %s", mattermostUserID, err.Error())
 		return false
 	}
 
@@ -302,8 +300,7 @@ func (s *pluginStore) MakeCheckUserStatus(logger bot.Logger, mattermostUserID st
 	return true
 }
 
-// Make the change user status function
-func (s *pluginStore) MakeChangeUserStatus(err error, logger bot.Logger, mattermostUserID string, poster bot.Poster) {
+func (s *pluginStore) DisconnectUserFromStoreIfNecessary(err error, mattermostUserID string) {
 	if err == nil {
 		return
 	}
@@ -314,19 +311,19 @@ func (s *pluginStore) MakeChangeUserStatus(err error, logger bot.Logger, matterm
 
 	user, err := s.LoadUser(mattermostUserID)
 	if err != nil {
-		logger.Errorf("Not able to load the user %s. error: %s", mattermostUserID, err.Error())
+		s.Logger.Errorf("Not able to load the user %s. error: %s", mattermostUserID, err.Error())
 		return
 	}
 
 	// Mark the user as inactive
 	user.OAuth2Token = nil
 	if err = s.StoreUser(user); err != nil {
-		logger.Errorf("Not able to store the user %s. error: %s", mattermostUserID, err.Error())
+		s.Logger.Errorf("Not able to store the user %s. error: %s", mattermostUserID, err.Error())
 		return
 	}
 
-	if _, err := poster.DM(mattermostUserID, ErrorUserInactive); err != nil {
-		logger.Errorf("Not able to DM the user %s. error: %s", mattermostUserID, err.Error())
+	if _, err := s.Poster.DM(mattermostUserID, ErrorUserInactive); err != nil {
+		s.Logger.Errorf("Not able to DM the user %s. error: %s", mattermostUserID, err.Error())
 		return
 	}
 }

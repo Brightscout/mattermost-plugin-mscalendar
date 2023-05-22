@@ -141,9 +141,9 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 	n.Subscription = sub.Remote
 	n.SubscriptionCreator = creator.Remote
 
-	tokenHelpers := &serializer.UserTokenHelpers{
-		CheckUserStatus:      processor.Store.MakeCheckUserStatus,
-		ChangeUserStatus:     processor.Store.MakeChangeUserStatus,
+	tokenHelpers := &remote.UserTokenHelpers{
+		CheckUserStatus:      processor.Store.CheckUserConnected,
+		ChangeUserStatus:     processor.Store.DisconnectUserFromStoreIfNecessary,
 		RefreshAndStoreToken: processor.Store.RefreshAndStoreToken,
 	}
 	client := processor.Remote.MakeUserClient(context.Background(), creator.OAuth2Token, sub.MattermostCreatorID, processor.Poster, tokenHelpers)

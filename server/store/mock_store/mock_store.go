@@ -7,7 +7,6 @@ package mock_store
 import (
 	gomock "github.com/golang/mock/gomock"
 	store "github.com/mattermost/mattermost-plugin-mscalendar/server/store"
-	bot "github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	oauth2 "golang.org/x/oauth2"
 	reflect "reflect"
 )
@@ -299,30 +298,30 @@ func (mr *MockStoreMockRecorder) LoadUserWelcomePost(arg0 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadUserWelcomePost", reflect.TypeOf((*MockStore)(nil).LoadUserWelcomePost), arg0)
 }
 
-// MakeChangeUserStatus mocks base method
-func (m *MockStore) MakeChangeUserStatus(arg0 error, arg1 bot.Logger, arg2 string, arg3 bot.Poster) {
+// DisconnectUserFromStoreIfNecessary mocks base method
+func (m *MockStore) DisconnectUserFromStoreIfNecessary(arg0 error, arg1 string) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "MakeChangeUserStatus", arg0, arg1, arg2, arg3)
+	m.ctrl.Call(m, "DisconnectUserFromStoreIfNecessary", arg0, arg1)
 }
 
-// MakeChangeUserStatus indicates an expected call of MakeChangeUserStatus
-func (mr *MockStoreMockRecorder) MakeChangeUserStatus(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+// DisconnectUserFromStoreIfNecessary indicates an expected call of DisconnectUserFromStoreIfNecessary
+func (mr *MockStoreMockRecorder) DisconnectUserFromStoreIfNecessary(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MakeChangeUserStatus", reflect.TypeOf((*MockStore)(nil).MakeChangeUserStatus), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DisconnectUserFromStoreIfNecessary", reflect.TypeOf((*MockStore)(nil).DisconnectUserFromStoreIfNecessary), arg0, arg1)
 }
 
-// MakeCheckUserStatus mocks base method
-func (m *MockStore) MakeCheckUserStatus(arg0 bot.Logger, arg1 string) bool {
+// CheckUserConnected mocks base method
+func (m *MockStore) CheckUserConnected(arg0 string) bool {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "MakeCheckUserStatus", arg0, arg1)
+	ret := m.ctrl.Call(m, "CheckUserConnected", arg0)
 	ret0, _ := ret[0].(bool)
 	return ret0
 }
 
-// MakeCheckUserStatus indicates an expected call of MakeCheckUserStatus
-func (mr *MockStoreMockRecorder) MakeCheckUserStatus(arg0, arg1 interface{}) *gomock.Call {
+// CheckUserConnected indicates an expected call of CheckUserConnected
+func (mr *MockStoreMockRecorder) CheckUserConnected(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MakeCheckUserStatus", reflect.TypeOf((*MockStore)(nil).MakeCheckUserStatus), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckUserConnected", reflect.TypeOf((*MockStore)(nil).CheckUserConnected), arg0)
 }
 
 // ModifyUserIndex mocks base method

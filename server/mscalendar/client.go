@@ -7,7 +7,6 @@ import (
 	"context"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/serializer"
 )
 
 type Client interface {
@@ -21,9 +20,9 @@ func (m *mscalendar) MakeClient() (remote.Client, error) {
 		return nil, err
 	}
 
-	tokenHelpers := &serializer.UserTokenHelpers{
-		CheckUserStatus:      m.Store.MakeCheckUserStatus,
-		ChangeUserStatus:     m.Store.MakeChangeUserStatus,
+	tokenHelpers := &remote.UserTokenHelpers{
+		CheckUserStatus:      m.Store.CheckUserConnected,
+		ChangeUserStatus:     m.Store.DisconnectUserFromStoreIfNecessary,
 		RefreshAndStoreToken: m.Store.RefreshAndStoreToken,
 	}
 
