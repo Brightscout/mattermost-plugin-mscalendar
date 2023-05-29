@@ -33,7 +33,7 @@ type calendarViewBatchResponse struct {
 func (c *client) GetDefaultCalendarView(remoteUserID string, start, end time.Time) ([]*serializer.Event, error) {
 	paramStr := getQueryParamStringForCalendarView(start, end)
 
-	if !c.tokenHelpers.CheckUserStatus(c.mattermostUserID) {
+	if !c.tokenHelpers.CheckUserConnected(c.mattermostUserID) {
 		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
 		return nil, errors.New(ErrorUserInactive)
 	}
@@ -42,7 +42,7 @@ func (c *client) GetDefaultCalendarView(remoteUserID string, start, end time.Tim
 	err := c.rbuilder.Users().ID(remoteUserID).CalendarView().Request().JSONRequest(
 		c.ctx, http.MethodGet, paramStr, nil, res)
 	if err != nil {
-		c.tokenHelpers.ChangeUserStatus(err, c.mattermostUserID)
+		c.tokenHelpers.DisconnectUserFromStoreIfNecessary(err, c.mattermostUserID)
 		return nil, errors.Wrap(err, "msgraph GetDefaultCalendarView")
 	}
 

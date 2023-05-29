@@ -21,8 +21,8 @@ type MailboxSettings struct {
 	WorkingHours WorkingHours `json:"workingHours"`
 }
 
-type UserTokenHelpers struct {
-	CheckUserStatus      func(mattermostUserID string) bool
-	ChangeUserStatus     func(err error, mattermostUserID string)
-	RefreshAndStoreToken func(token *oauth2.Token, oconf *oauth2.Config, mattermostUserID string) (*oauth2.Token, error)
+type UserTokenHelpers interface {
+	CheckUserConnected(mattermostUserID string) bool
+	DisconnectUserFromStoreIfNecessary(err error, mattermostUserID string)
+	RefreshAndStoreToken(token *oauth2.Token, oconf *oauth2.Config, mattermostUserID string) (*oauth2.Token, error)
 }

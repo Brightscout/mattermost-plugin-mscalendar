@@ -20,13 +20,7 @@ func (m *mscalendar) MakeClient() (remote.Client, error) {
 		return nil, err
 	}
 
-	tokenHelpers := &remote.UserTokenHelpers{
-		CheckUserStatus:      m.Store.CheckUserConnected,
-		ChangeUserStatus:     m.Store.DisconnectUserFromStoreIfNecessary,
-		RefreshAndStoreToken: m.Store.RefreshAndStoreToken,
-	}
-
-	return m.Remote.MakeUserClient(context.Background(), m.actingUser.OAuth2Token, m.actingUser.MattermostUserID, m.Poster, tokenHelpers), nil
+	return m.Remote.MakeUserClient(context.Background(), m.actingUser.OAuth2Token, m.actingUser.MattermostUserID, m.Poster, m.Store), nil
 }
 
 func (m *mscalendar) MakeSuperuserClient() (remote.Client, error) {

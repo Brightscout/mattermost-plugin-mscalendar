@@ -24,7 +24,7 @@ type client struct {
 
 	mattermostUserID string
 	conf             *config.Config
-	tokenHelpers     *remote.UserTokenHelpers
+	tokenHelpers     remote.UserTokenHelpers
 
 	bot.Logger
 	bot.Poster

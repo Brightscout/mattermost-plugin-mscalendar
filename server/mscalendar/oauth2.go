@@ -13,7 +13,6 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/oauth2connect"
 )
@@ -72,13 +71,7 @@ func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 		return err
 	}
 
-	tokenHelpers := &remote.UserTokenHelpers{
-		CheckUserStatus:      app.Store.CheckUserConnected,
-		ChangeUserStatus:     app.Store.DisconnectUserFromStoreIfNecessary,
-		RefreshAndStoreToken: app.Store.RefreshAndStoreToken,
-	}
-
-	client := app.Remote.MakeClient(ctx, tok, mattermostUserID, app.Poster, tokenHelpers)
+	client := app.Remote.MakeUserClient(ctx, tok, mattermostUserID, app.Poster, app.Store)
 	me, err := client.GetMe()
 	if err != nil {
 		return err

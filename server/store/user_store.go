@@ -293,11 +293,7 @@ func (s *pluginStore) CheckUserConnected(mattermostUserID string) bool {
 	}
 
 	// Check if the user is marked as inactive
-	if user.OAuth2Token == nil {
-		return false
-	}
-
-	return true
+	return user.OAuth2Token != nil
 }
 
 func (s *pluginStore) DisconnectUserFromStoreIfNecessary(err error, mattermostUserID string) {
