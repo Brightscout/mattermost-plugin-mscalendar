@@ -11,7 +11,7 @@ import (
 	"github.com/jarcoal/httpmock"
 	"golang.org/x/oauth2"
 
-	"github.com/mattermost/mattermost-server/v5/model"
+	"github.com/mattermost/mattermost-server/v6/model"
 	"github.com/stretchr/testify/require"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
