@@ -141,7 +141,7 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 	n.Subscription = sub.Remote
 	n.SubscriptionCreator = creator.Remote
 
-	client := processor.Remote.MakeClient(context.Background(), processor.Poster, processor.Store, creator.MattermostUserID, creator.OAuth2Token)
+	client := processor.Remote.MakeUserClient(context.Background(), creator.OAuth2Token, sub.MattermostCreatorID, processor.Poster, processor.Store)
 
 	if n.RecommendRenew {
 		var renewed *serializer.Subscription

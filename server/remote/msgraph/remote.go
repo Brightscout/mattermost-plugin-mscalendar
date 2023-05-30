@@ -14,7 +14,6 @@ import (
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
@@ -37,7 +36,7 @@ func NewRemote(conf *config.Config, logger bot.Logger) remote.Remote {
 }
 
 // MakeClient creates a new client for user-delegated permissions.
-func (r *impl) MakeClient(ctx context.Context, poster bot.Poster, store store.Store, mattermostUserID string, token *oauth2.Token) remote.Client {
+func (r *impl) MakeClient(ctx context.Context, token *oauth2.Token, mattermostUserID string, poster bot.Poster, userTokenHelpers remote.UserTokenHelpers) remote.Client {
 	httpClient := r.NewOAuth2Config().Client(ctx, token)
 	c := &client{
 		conf:             r.conf,
@@ -45,11 +44,25 @@ func (r *impl) MakeClient(ctx context.Context, poster bot.Poster, store store.St
 		httpClient:       httpClient,
 		Logger:           r.logger,
 		rbuilder:         msgraph.NewClient(httpClient),
-		store:            store,
+		tokenHelpers:     userTokenHelpers,
 		mattermostUserID: mattermostUserID,
-		poster:           poster,
+		Poster:           poster,
 	}
+
 	return c
+}
+
+// MakeUserClient creates a new client having user-delegated permissions with refreshed token.
+func (r *impl) MakeUserClient(ctx context.Context, oauthToken *oauth2.Token, mattermostUserID string, poster bot.Poster, userTokenHelpers remote.UserTokenHelpers) remote.Client {
+	config := r.NewOAuth2Config()
+
+	token, err := userTokenHelpers.RefreshAndStoreToken(oauthToken, config, mattermostUserID)
+	if err != nil {
+		r.logger.Warnf("Not able to refresh or store the token", "error", err.Error())
+		return &client{}
+	}
+
+	return r.MakeClient(ctx, token, mattermostUserID, poster, userTokenHelpers)
 }
 
 // MakeSuperuserClient creates a new client used for app-only permissions.
@@ -71,7 +84,7 @@ func (r *impl) MakeSuperuserClient(ctx context.Context) (remote.Client, error) {
 		AccessToken: token,
 		TokenType:   "Bearer",
 	}
-	return r.MakeClient(ctx, nil, nil, "", o), nil
+	return r.MakeClient(ctx, o, "", nil, nil), nil
 }
 
 func (r *impl) NewOAuth2Config() *oauth2.Config {

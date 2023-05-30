@@ -151,11 +151,11 @@ func TestProcessNotification(t *testing.T) {
 			mockStore.EXPECT().LoadUser("creator_mm_id").Return(user, nil).Times(1)
 
 			if tc.notification.ClientState == subscription.Remote.ClientState {
-				mockRemote.EXPECT().MakeClient(context.Background(), mockPoster, mockStore, "creator_mm_id", &oauth2.Token{
+				mockRemote.EXPECT().MakeUserClient(context.Background(), &oauth2.Token{
 					AccessToken: "creator_oauth_token",
-				}).Return(mockClient).Times(1)
-				mockClient.EXPECT().GetMailboxSettings(user.Remote.ID).Return(&remote.MailboxSettings{TimeZone: "Eastern Standard Time"}, nil)
+				}, "creator_mm_id", mockPoster, gomock.Any()).Return(mockClient)
 
+				mockClient.EXPECT().GetMailboxSettings(user.Remote.ID).Return(&remote.MailboxSettings{TimeZone: "Eastern Standard Time"}, nil)
 				if tc.notification.RecommendRenew {
 					mockClient.EXPECT().RenewSubscription("remote_subscription_id").Return(&serializer.Subscription{}, nil).Times(1)
 					mockStore.EXPECT().StoreUserSubscription(user, &store.Subscription{
