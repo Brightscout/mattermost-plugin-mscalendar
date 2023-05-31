@@ -51,20 +51,6 @@ func (mr *MockRemoteMockRecorder) HandleWebhook(arg0, arg1 interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HandleWebhook", reflect.TypeOf((*MockRemote)(nil).HandleWebhook), arg0, arg1)
 }
 
-// MakeClient mocks base method
-func (m *MockRemote) MakeClient(arg0 context.Context, arg1 *oauth2.Token, arg2 string, arg3 bot.Poster, arg4 remote.UserTokenHelpers) remote.Client {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "MakeClient", arg0, arg1, arg2, arg3, arg4)
-	ret0, _ := ret[0].(remote.Client)
-	return ret0
-}
-
-// MakeClient indicates an expected call of MakeClient
-func (mr *MockRemoteMockRecorder) MakeClient(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MakeClient", reflect.TypeOf((*MockRemote)(nil).MakeClient), arg0, arg1, arg2, arg3, arg4)
-}
-
 // MakeSuperuserClient mocks base method
 func (m *MockRemote) MakeSuperuserClient(arg0 context.Context) (remote.Client, error) {
 	m.ctrl.T.Helper()

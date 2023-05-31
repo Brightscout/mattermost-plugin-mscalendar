@@ -14,7 +14,6 @@ import (
 )
 
 type Remote interface {
-	MakeClient(context.Context, *oauth2.Token, string, bot.Poster, UserTokenHelpers) Client
 	MakeUserClient(context.Context, *oauth2.Token, string, bot.Poster, UserTokenHelpers) Client
 	MakeSuperuserClient(ctx context.Context) (Client, error)
 	NewOAuth2Config() *oauth2.Config
