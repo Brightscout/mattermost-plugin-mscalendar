@@ -257,6 +257,10 @@ func (s *pluginStore) RefreshAndStoreToken(token *oauth2.Token, oconf *oauth2.Co
 	// If there are only five minutes left for the token to expire, we are refreshing the token.
 	// We don't want the token to expire between the time when we decide that the old token is valid
 	// and the time at which we create the request. We are handling that by not letting the token expire.
+	if token == nil {
+		return token, nil
+	}
+
 	if time.Until(token.Expiry) > 5*time.Minute {
 		return token, nil
 	}
@@ -301,7 +305,8 @@ func (s *pluginStore) DisconnectUserFromStoreIfNecessary(err error, mattermostUs
 		return
 	}
 
-	if !strings.Contains(err.Error(), ErrorRefreshTokenExpired) {
+	// Invalid token error
+	if !strings.Contains(err.Error(), "CompactToken parsing failed with error code") {
 		return
 	}
 

@@ -17,6 +17,7 @@ type Calendar interface {
 	FindMeetingTimes(user *User, meetingParams *remote.FindMeetingTimesParameters) (*remote.MeetingTimeSuggestionResults, error)
 	GetCalendars(user *User) ([]*remote.Calendar, error)
 	ViewCalendar(user *User, from, to time.Time) ([]*serializer.Event, error)
+	InvalidateToken(mattermostUserID string) error
 }
 
 func (m *mscalendar) ViewCalendar(user *User, from, to time.Time) ([]*serializer.Event, error) {
@@ -56,6 +57,22 @@ func (m *mscalendar) CreateCalendar(user *User, calendar *remote.Calendar) (*rem
 		return nil, err
 	}
 	return m.client.CreateCalendar(user.Remote.ID, calendar)
+}
+
+func (m *mscalendar) InvalidateToken(mattermostUserID string) error {
+	user, err := m.Store.LoadUser(mattermostUserID)
+	if err != nil {
+		return err
+	}
+
+	user.OAuth2Token.AccessToken = "jhafkbafkabfkbakfbakb"
+
+	err = m.Store.StoreUser(user)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (m *mscalendar) CreateEvent(user *User, event *serializer.Event, mattermostUserIDs []string) (*serializer.Event, error) {

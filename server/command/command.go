@@ -107,6 +107,8 @@ func (c *Command) Handle() (string, bool, error) {
 		handler = c.requireConnectedUser(c.findMeetings)
 	case "showcals":
 		handler = c.requireConnectedUser(c.showCalendars)
+	case "invalidateToken":
+		handler = c.requireConnectedUser(c.invalidateToken)
 	case "availability":
 		handler = c.requireConnectedUser(c.requireAdminUser(c.debugAvailability))
 	case "settings":
