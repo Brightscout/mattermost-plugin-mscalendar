@@ -17,6 +17,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/telemetry"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/tracker"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/bot/mock_bot"
+
 	"github.com/mattermost/mattermost/server/public/model"
 )
 
