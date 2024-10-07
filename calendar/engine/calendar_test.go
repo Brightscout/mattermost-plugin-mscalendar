@@ -604,6 +604,7 @@ func MockSetup(t *testing.T) (*mscalendar, *mock_store.MockStore, *mock_bot.Mock
 			DisplayName:    "testDisplayName",
 			CommandTrigger: "testCommandTrigger",
 		},
+		PluginVersion: "1.0.0",
 	}
 
 	return mscalendar, mockStore, mockPoster, mockRemote, mockPluginAPI, mockClient, mockLogger
