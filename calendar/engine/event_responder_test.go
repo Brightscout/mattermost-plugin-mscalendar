@@ -3,11 +3,13 @@ package engine
 import (
 	"testing"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
-	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/store"
-	"github.com/mattermost/mattermost/server/public/model"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
+
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/store"
+
+	"github.com/mattermost/mattermost/server/public/model"
 )
 
 func TestAcceptEvent(t *testing.T) {
