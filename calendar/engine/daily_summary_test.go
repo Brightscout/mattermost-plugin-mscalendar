@@ -17,6 +17,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/telemetry"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/tracker"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/bot/mock_bot"
+	"github.com/mattermost/mattermost/server/public/model"
 )
 
 func TestGetDaySummaryForUser(t *testing.T) {
@@ -499,6 +500,235 @@ func TestShouldPostDailySummary(t *testing.T) {
 			} else {
 				require.Nil(t, err)
 			}
+		})
+	}
+}
+
+func TestGetDailySummarySettingsForUser(t *testing.T) {
+	mscalendar, mockStore, _, _, mockPluginAPI, _, _ := MockSetup(t)
+
+	user := &User{
+		User:             &store.User{Settings: store.Settings{}},
+		MattermostUserID: "testMMUserID",
+	}
+
+	tests := []struct {
+		name                 string
+		setupMock            func()
+		expectedSettings     *store.DailySummaryUserSettings
+		expectedErrorMessage string
+		assertion            func(t *testing.T, settings *store.DailySummaryUserSettings, err error)
+	}{
+		{
+			name: "error filtering with user",
+			setupMock: func() {
+				user.User = nil
+				mockStore.EXPECT().LoadUser("testMMUserID").Return(nil, errors.New("error filtering user")).Times(1)
+			},
+			expectedSettings:     nil,
+			expectedErrorMessage: "It looks like your Mattermost account is not connected to testDisplayName. Please connect your account using `/testCommandTrigger connect`.: error filtering user",
+			assertion: func(t *testing.T, settings *store.DailySummaryUserSettings, err error) {
+				require.Error(t, err)
+				require.EqualError(t, err, "It looks like your Mattermost account is not connected to testDisplayName. Please connect your account using `/testCommandTrigger connect`.: error filtering user")
+				require.Nil(t, settings)
+			},
+		},
+		{
+			name: "successful retrieval of daily summary settings",
+			setupMock: func() {
+				user.User = &store.User{Settings: store.Settings{}}
+				user.Settings.DailySummary = store.DefaultDailySummaryUserSettings()
+				mockPluginAPI.EXPECT().GetMattermostUser("testMMUserID").Return(&model.User{}, nil)
+			},
+			expectedSettings:     store.DefaultDailySummaryUserSettings(),
+			expectedErrorMessage: "",
+			assertion: func(t *testing.T, settings *store.DailySummaryUserSettings, err error) {
+				require.NoError(t, err)
+				require.Equal(t, store.DefaultDailySummaryUserSettings(), settings)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setupMock()
+
+			settings, err := mscalendar.GetDailySummarySettingsForUser(user)
+			tt.assertion(t, settings, err)
+		})
+	}
+}
+
+func TestSetDailySummaryPostTime(t *testing.T) {
+	mscalendar, mockStore, _, _, mockPluginAPI, mockClient, _ := MockSetup(t)
+
+	user := &User{
+		User:             &store.User{Settings: store.Settings{}},
+		MattermostUserID: "testMMUserID",
+	}
+
+	tests := []struct {
+		name                 string
+		timeStr              string
+		setupMock            func()
+		expectedSettings     *store.DailySummaryUserSettings
+		expectedErrorMessage string
+		assertion            func(t *testing.T, settings *store.DailySummaryUserSettings, err error)
+	}{
+		{
+			name:    "error filtering with user",
+			timeStr: "9:00 AM",
+			setupMock: func() {
+				user.User = nil
+				mockStore.EXPECT().LoadUser("testMMUserID").Return(nil, errors.New("error filtering user")).Times(1)
+			},
+			expectedSettings:     nil,
+			expectedErrorMessage: "It looks like your Mattermost account is not connected to testDisplayName. Please connect your account using `/testCommandTrigger connect`.: error filtering user",
+			assertion: func(t *testing.T, settings *store.DailySummaryUserSettings, err error) {
+				require.Error(t, err)
+				require.EqualError(t, err, "It looks like your Mattermost account is not connected to testDisplayName. Please connect your account using `/testCommandTrigger connect`.: error filtering user")
+				require.Nil(t, settings)
+			},
+		},
+		{
+			name:    "invalid time format",
+			timeStr: "invalid time",
+			setupMock: func() {
+				user.User = &store.User{Settings: store.Settings{}}
+				mockPluginAPI.EXPECT().GetMattermostUser("testMMUserID")
+			},
+			expectedSettings:     nil,
+			expectedErrorMessage: "Invalid time value: invalid time",
+			assertion: func(t *testing.T, settings *store.DailySummaryUserSettings, err error) {
+				require.Error(t, err)
+				require.EqualError(t, err, "Invalid time value: invalid time")
+				require.Nil(t, settings)
+			},
+		},
+		{
+			name:    "time not a multiple of interval",
+			timeStr: "9:05 AM",
+			setupMock: func() {
+				mockPluginAPI.EXPECT().GetMattermostUser("testMMUserID")
+				user.Settings.DailySummary = store.DefaultDailySummaryUserSettings()
+			},
+			expectedSettings:     nil,
+			expectedErrorMessage: "Invalid time value: 9:05 AM",
+			assertion: func(t *testing.T, settings *store.DailySummaryUserSettings, err error) {
+				require.Error(t, err)
+				require.EqualError(t, err, "Invalid time value: 9:05 AM")
+				require.Nil(t, settings)
+			},
+		},
+		{
+			name:    "successful setting of daily summary post time",
+			timeStr: "9:00AM",
+			setupMock: func() {
+				user.User = &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}}
+				mockPluginAPI.EXPECT().GetMattermostUser("testMMUserID")
+				user.Settings.DailySummary = store.DefaultDailySummaryUserSettings()
+				mockStore.EXPECT().StoreUser(user.User).Return(nil).Times(1)
+				mockClient.EXPECT().GetMailboxSettings("testRemoteID").Return(&remote.MailboxSettings{TimeZone: "UTC"}, nil)
+			},
+			expectedSettings: &store.DailySummaryUserSettings{
+				PostTime: "9:00AM",
+				Timezone: "UTC",
+			},
+			expectedErrorMessage: "",
+			assertion: func(t *testing.T, settings *store.DailySummaryUserSettings, err error) {
+				require.NoError(t, err)
+				require.Equal(t, &store.DailySummaryUserSettings{
+					PostTime: "9:00AM",
+					Timezone: "UTC",
+				}, settings)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setupMock()
+
+			settings, err := mscalendar.SetDailySummaryPostTime(user, tt.timeStr)
+			tt.assertion(t, settings, err)
+		})
+	}
+}
+
+func TestSetDailySummaryEnabled(t *testing.T) {
+	mscalendar, mockStore, _, _, mockPluginAPI, _, _ := MockSetup(t)
+
+	user := &User{
+		User:             &store.User{Settings: store.Settings{}},
+		MattermostUserID: "testMMUserID",
+	}
+
+	tests := []struct {
+		name                 string
+		enable               bool
+		setupMock            func()
+		expectedSettings     *store.DailySummaryUserSettings
+		expectedErrorMessage string
+		assertion            func(t *testing.T, settings *store.DailySummaryUserSettings, err error)
+	}{
+		{
+			name:   "error filtering with user",
+			enable: true,
+			setupMock: func() {
+				user.User = nil
+				mockStore.EXPECT().LoadUser("testMMUserID").Return(nil, errors.New("error filtering user")).Times(1)
+			},
+			expectedSettings:     nil,
+			expectedErrorMessage: "It looks like your Mattermost account is not connected to testDisplayName. Please connect your account using `/testCommandTrigger connect`.: error filtering user",
+			assertion: func(t *testing.T, settings *store.DailySummaryUserSettings, err error) {
+				require.Error(t, err)
+				require.EqualError(t, err, "It looks like your Mattermost account is not connected to testDisplayName. Please connect your account using `/testCommandTrigger connect`.: error filtering user")
+				require.Nil(t, settings)
+			},
+		},
+		{
+			name:   "error storing user settings",
+			enable: false,
+			setupMock: func() {
+				user.User = &store.User{Settings: store.Settings{}}
+				user.Settings.DailySummary = store.DefaultDailySummaryUserSettings()
+
+				mockPluginAPI.EXPECT().GetMattermostUser("testMMUserID")
+				mockStore.EXPECT().StoreUser(user.User).Return(errors.New("store error")).Times(1)
+			},
+			expectedSettings:     nil,
+			expectedErrorMessage: "store error",
+			assertion: func(t *testing.T, settings *store.DailySummaryUserSettings, err error) {
+				require.Error(t, err)
+				require.EqualError(t, err, "store error")
+				require.Nil(t, settings)
+			},
+		},
+		{
+			name:   "successful enabling of daily summary",
+			enable: true,
+			setupMock: func() {
+				user.User = &store.User{Settings: store.Settings{}}
+				user.Settings.DailySummary = store.DefaultDailySummaryUserSettings()
+
+				mockPluginAPI.EXPECT().GetMattermostUser("testMMUserID")
+				mockStore.EXPECT().StoreUser(user.User).Return(nil).Times(1)
+			},
+			expectedSettings:     &store.DailySummaryUserSettings{PostTime: "8:00AM", Timezone: "Eastern Standard Time", LastPostTime: "", Enable: true},
+			expectedErrorMessage: "",
+			assertion: func(t *testing.T, settings *store.DailySummaryUserSettings, err error) {
+				require.NoError(t, err)
+				require.Equal(t, &store.DailySummaryUserSettings{PostTime: "8:00AM", Timezone: "Eastern Standard Time", LastPostTime: "", Enable: true}, settings)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setupMock()
+
+			settings, err := mscalendar.SetDailySummaryEnabled(user, tt.enable)
+			tt.assertion(t, settings, err)
 		})
 	}
 }
