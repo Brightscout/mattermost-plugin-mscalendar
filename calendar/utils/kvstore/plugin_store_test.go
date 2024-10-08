@@ -62,7 +62,7 @@ func TestLoad(t *testing.T) {
 		name       string
 		key        string
 		setup      func(*MockPluginAPI)
-		assertions func(*testing.T, *MockPluginAPI, []byte, error)
+		assertions func(*testing.T, []byte, error)
 	}{
 		{
 			name: "Error during KVGet",
@@ -70,7 +70,7 @@ func TestLoad(t *testing.T) {
 			setup: func(mockAPI *MockPluginAPI) {
 				mockAPI.On("KVGet", "error-key").Return(nil, &model.AppError{Message: "KVGet failed"})
 			},
-			assertions: func(t *testing.T, mockAPI *MockPluginAPI, data []byte, err error) {
+			assertions: func(t *testing.T, data []byte, err error) {
 				require.Nil(t, data, "expected nil data")
 				require.EqualError(t, err, "failed plugin KVGet: KVGet failed", "unexpected error message")
 			},
@@ -81,7 +81,7 @@ func TestLoad(t *testing.T) {
 			setup: func(mockAPI *MockPluginAPI) {
 				mockAPI.On("KVGet", "missing-key").Return(nil, nil)
 			},
-			assertions: func(t *testing.T, mockAPI *MockPluginAPI, data []byte, err error) {
+			assertions: func(t *testing.T, data []byte, err error) {
 				require.Nil(t, data, "expected nil data")
 				require.EqualError(t, err, ErrNotFound.Error(), "unexpected error message")
 			},
@@ -92,7 +92,7 @@ func TestLoad(t *testing.T) {
 			setup: func(mockAPI *MockPluginAPI) {
 				mockAPI.On("KVGet", "test-key").Return([]byte("test-value"), nil)
 			},
-			assertions: func(t *testing.T, mockAPI *MockPluginAPI, data []byte, err error) {
+			assertions: func(t *testing.T, data []byte, err error) {
 				require.Equal(t, []byte("test-value"), data, "unexpected data returned")
 				require.NoError(t, err, "unexpected error occurred")
 			},
@@ -107,7 +107,7 @@ func TestLoad(t *testing.T) {
 
 			data, err := store.Load(tt.key)
 
-			tt.assertions(t, mockAPI, data, err)
+			tt.assertions(t, data, err)
 
 			mockAPI.AssertExpectations(t)
 		})
@@ -119,7 +119,7 @@ func TestStore(t *testing.T) {
 		name       string
 		expiryTime int
 		setup      func(*MockPluginAPI)
-		assertions func(*testing.T, *MockPluginAPI, error)
+		assertions func(*testing.T, error)
 	}{
 		{
 			name:       "Error during KVSet with TTL",
@@ -127,7 +127,7 @@ func TestStore(t *testing.T) {
 			setup: func(mockAPI *MockPluginAPI) {
 				mockAPI.On("KVSetWithExpiry", "mockKey", []byte("mockValue"), int64(60)).Return(&model.AppError{Message: "KVSet failed"})
 			},
-			assertions: func(t *testing.T, mockAPI *MockPluginAPI, err error) {
+			assertions: func(t *testing.T, err error) {
 				require.EqualError(t, err, "failed plugin KVSet (ttl: 60s) \"mockKey\": KVSet failed", "unexpected error message")
 			},
 		},
@@ -137,7 +137,7 @@ func TestStore(t *testing.T) {
 			setup: func(mockAPI *MockPluginAPI) {
 				mockAPI.On("KVSet", "mockKey", []byte("mockValue")).Return(&model.AppError{Message: "KVSet failed"})
 			},
-			assertions: func(t *testing.T, mockAPI *MockPluginAPI, err error) {
+			assertions: func(t *testing.T, err error) {
 				require.EqualError(t, err, "failed plugin KVSet (ttl: 0s) \"mockKey\": KVSet failed", "unexpected error message")
 			},
 		},
@@ -147,7 +147,7 @@ func TestStore(t *testing.T) {
 			setup: func(mockAPI *MockPluginAPI) {
 				mockAPI.On("KVSetWithExpiry", "mockKey", []byte("mockValue"), int64(60)).Return(nil)
 			},
-			assertions: func(t *testing.T, mockAPI *MockPluginAPI, err error) {
+			assertions: func(t *testing.T, err error) {
 				require.NoError(t, err, "unexpected error occurred")
 			},
 		},
@@ -157,7 +157,7 @@ func TestStore(t *testing.T) {
 			setup: func(mockAPI *MockPluginAPI) {
 				mockAPI.On("KVSet", "mockKey", []byte("mockValue")).Return(nil)
 			},
-			assertions: func(t *testing.T, mockAPI *MockPluginAPI, err error) {
+			assertions: func(t *testing.T, err error) {
 				require.NoError(t, err, "unexpected error occurred")
 			},
 		},
@@ -171,7 +171,7 @@ func TestStore(t *testing.T) {
 
 			err := store.Store("mockKey", []byte("mockValue"))
 
-			tt.assertions(t, mockAPI, err)
+			tt.assertions(t, err)
 
 			mockAPI.AssertExpectations(t)
 		})
@@ -182,14 +182,14 @@ func TestStoreTTL(t *testing.T) {
 	tests := []struct {
 		name       string
 		setup      func(*MockPluginAPI)
-		assertions func(*testing.T, *MockPluginAPI, error)
+		assertions func(*testing.T, error)
 	}{
 		{
 			name: "Error during storing with TTL",
 			setup: func(mockAPI *MockPluginAPI) {
 				mockAPI.On("KVSetWithExpiry", "mockKey", []byte("mockValue"), int64(60)).Return(&model.AppError{Message: "KVSet failed"})
 			},
-			assertions: func(t *testing.T, mockAPI *MockPluginAPI, err error) {
+			assertions: func(t *testing.T, err error) {
 				require.EqualError(t, err, "failed plugin KVSet (ttl: 60s) \"mockKey\": KVSet failed", "unexpected error message")
 			},
 		},
@@ -198,7 +198,7 @@ func TestStoreTTL(t *testing.T) {
 			setup: func(mockAPI *MockPluginAPI) {
 				mockAPI.On("KVSetWithExpiry", "mockKey", []byte("mockValue"), int64(60)).Return(nil)
 			},
-			assertions: func(t *testing.T, mockAPI *MockPluginAPI, err error) {
+			assertions: func(t *testing.T, err error) {
 				require.NoError(t, err, "unexpected error occurred")
 			},
 		},
@@ -211,7 +211,7 @@ func TestStoreTTL(t *testing.T) {
 
 			err := store.StoreTTL("mockKey", []byte("mockValue"), 60)
 
-			tt.assertions(t, mockAPI, err)
+			tt.assertions(t, err)
 
 			mockAPI.AssertExpectations(t)
 		})
@@ -224,7 +224,7 @@ func TestStoreWithOptions(t *testing.T) {
 		expiryTime int64
 		opts       model.PluginKVSetOptions
 		setup      func(*MockPluginAPI)
-		assertions func(*testing.T, *MockPluginAPI, bool, error)
+		assertions func(*testing.T, bool, error)
 	}{
 		{
 			name:       "Error during KVSetWithOptions",
@@ -235,7 +235,7 @@ func TestStoreWithOptions(t *testing.T) {
 			setup: func(mockAPI *MockPluginAPI) {
 				mockAPI.On("KVSetWithOptions", "mockKey", []byte("mockValue"), model.PluginKVSetOptions{ExpireInSeconds: 30}).Return(false, &model.AppError{Message: "KVSet failed"})
 			},
-			assertions: func(t *testing.T, mockAPI *MockPluginAPI, success bool, err error) {
+			assertions: func(t *testing.T, success bool, err error) {
 				require.False(t, success, "expected success to be false")
 				require.EqualError(t, err, "failed plugin KVSet (ttl: 30s) \"mockKey\": KVSet failed", "unexpected error message")
 			},
@@ -247,7 +247,7 @@ func TestStoreWithOptions(t *testing.T) {
 			setup: func(mockAPI *MockPluginAPI) {
 				mockAPI.On("KVSetWithOptions", "mockKey", []byte("mockValue"), model.PluginKVSetOptions{ExpireInSeconds: 60}).Return(true, nil)
 			},
-			assertions: func(t *testing.T, mockAPI *MockPluginAPI, success bool, err error) {
+			assertions: func(t *testing.T, success bool, err error) {
 				require.True(t, success, "expected success to be true")
 				require.NoError(t, err, "unexpected error occurred")
 			},
@@ -261,7 +261,7 @@ func TestStoreWithOptions(t *testing.T) {
 			setup: func(mockAPI *MockPluginAPI) {
 				mockAPI.On("KVSetWithOptions", "mockKey", []byte("mockValue"), model.PluginKVSetOptions{ExpireInSeconds: 30}).Return(true, nil)
 			},
-			assertions: func(t *testing.T, mockAPI *MockPluginAPI, success bool, err error) {
+			assertions: func(t *testing.T, success bool, err error) {
 				require.True(t, success, "expected success to be true")
 				require.NoError(t, err, "unexpected error occurred")
 			},
@@ -275,7 +275,7 @@ func TestStoreWithOptions(t *testing.T) {
 
 			success, err := store.StoreWithOptions("mockKey", []byte("mockValue"), tt.opts)
 
-			tt.assertions(t, mockAPI, success, err)
+			tt.assertions(t, success, err)
 
 			mockAPI.AssertExpectations(t)
 		})
