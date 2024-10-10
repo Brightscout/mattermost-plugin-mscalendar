@@ -3,15 +3,11 @@ package store
 import (
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/mattermost/mattermost/server/public/model"
 	"github.com/mattermost/mattermost/server/public/plugin"
-
-	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/tracker/mock_tracker"
-	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/bot/mock_bot"
 )
 
 type MockPluginAPI struct {
@@ -44,13 +40,18 @@ func (m *MockPluginAPI) KVDelete(key string) *model.AppError {
 	return nil
 }
 
+func (m *MockPluginAPI) KVSetWithOptions(key string, value []byte, options model.PluginKVSetOptions) (bool, *model.AppError) {
+	args := m.Called(key, value, options)
+
+	success := args.Bool(0)
+	if err := args.Get(1); err != nil {
+		return success, err.(*model.AppError)
+	}
+	return success, nil
+}
+
 func TestLoadUserWelcomePost(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	mockLogger := mock_bot.NewMockLogger(ctrl)
-	mockTracker := mock_tracker.NewMockTracker(ctrl)
-	mockAPI := &MockPluginAPI{}
-	store := NewPluginStore(mockAPI, mockLogger, mockTracker, false, nil)
+	mockAPI, store := MockStoreSetup(t)
 
 	tests := []struct {
 		name       string
@@ -93,12 +94,7 @@ func TestLoadUserWelcomePost(t *testing.T) {
 }
 
 func TestStoreUserWelcomePost(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	mockLogger := mock_bot.NewMockLogger(ctrl)
-	mockTracker := mock_tracker.NewMockTracker(ctrl)
-	mockAPI := &MockPluginAPI{}
-	store := NewPluginStore(mockAPI, mockLogger, mockTracker, false, nil)
+	mockAPI, store := MockStoreSetup(t)
 
 	tests := []struct {
 		name       string
@@ -139,12 +135,7 @@ func TestStoreUserWelcomePost(t *testing.T) {
 }
 
 func TestDeleteUserWelcomePost(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	mockLogger := mock_bot.NewMockLogger(ctrl)
-	mockTracker := mock_tracker.NewMockTracker(ctrl)
-	mockAPI := &MockPluginAPI{}
-	store := NewPluginStore(mockAPI, mockLogger, mockTracker, false, nil)
+	mockAPI, store := MockStoreSetup(t)
 
 	tests := []struct {
 		name       string
