@@ -50,8 +50,16 @@ func (m *MockPluginAPI) KVSetWithOptions(key string, value []byte, options model
 	return success, nil
 }
 
+func (m *MockPluginAPI) KVSetWithExpiry(key string, data []byte, ttlSeconds int64) *model.AppError {
+	args := m.Called(key, data, ttlSeconds)
+	if err := args.Get(0); err != nil {
+		return err.(*model.AppError)
+	}
+	return nil
+}
+
 func TestLoadUserWelcomePost(t *testing.T) {
-	mockAPI, store := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := MockStoreSetup(t)
 
 	tests := []struct {
 		name       string
@@ -94,7 +102,7 @@ func TestLoadUserWelcomePost(t *testing.T) {
 }
 
 func TestStoreUserWelcomePost(t *testing.T) {
-	mockAPI, store := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := MockStoreSetup(t)
 
 	tests := []struct {
 		name       string
@@ -135,7 +143,7 @@ func TestStoreUserWelcomePost(t *testing.T) {
 }
 
 func TestDeleteUserWelcomePost(t *testing.T) {
-	mockAPI, store := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := MockStoreSetup(t)
 
 	tests := []struct {
 		name       string
