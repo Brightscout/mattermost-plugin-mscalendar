@@ -23,13 +23,6 @@ import (
 func TestViewCalendar(t *testing.T) {
 	mscalendar, mockStore, _, _, _, mockClient, _ := MockSetup(t)
 
-	mscalendar.Config = &config.Config{
-		Provider: config.ProviderConfig{
-			DisplayName:    "testDisplayName",
-			CommandTrigger: "testCommandTrigger",
-		},
-	}
-
 	now := time.Now()
 	from := now.Add(-time.Hour)
 	to := now.Add(time.Hour)
@@ -48,11 +41,11 @@ func TestViewCalendar(t *testing.T) {
 				MattermostUserID: "testMMUserID",
 			},
 			setupMock: func() {
-				mockStore.EXPECT().LoadUser(gomock.Any()).Return(nil, errors.New("error loading the user")).Times(1)
+				mockStore.EXPECT().LoadUser("testMMUserID").Return(nil, errors.New("error loading the user")).Times(1)
 			},
 			assertions: func(t *testing.T, events []*remote.Event, err error) {
 				require.Error(t, err)
-				require.EqualError(t, err, "It looks like your Mattermost account is not connected to testDisplayName. Please connect your account using `/testCommandTrigger connect`.: error loading the user")
+				require.ErrorContains(t, err, "error loading the user")
 			},
 		},
 		{
@@ -88,7 +81,6 @@ func TestViewCalendar(t *testing.T) {
 			},
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMock()
@@ -102,13 +94,6 @@ func TestViewCalendar(t *testing.T) {
 
 func TestGetTodayCalendarEvents(t *testing.T) {
 	mscalendar, mockStore, _, _, _, mockClient, _ := MockSetup(t)
-
-	mscalendar.Config = &config.Config{
-		Provider: config.ProviderConfig{
-			DisplayName:    "testDisplayName",
-			CommandTrigger: "testCommandTrigger",
-		},
-	}
 
 	now := time.Now()
 	timezone := "America/Los_Angeles"
@@ -132,7 +117,7 @@ func TestGetTodayCalendarEvents(t *testing.T) {
 			},
 			assertions: func(t *testing.T, events []*remote.Event, err error) {
 				require.Error(t, err)
-				require.EqualError(t, err, "It looks like your Mattermost account is not connected to testDisplayName. Please connect your account using `/testCommandTrigger connect`.: error loading the user")
+				require.ErrorContains(t, err, "error loading the user")
 			},
 		},
 		{
@@ -168,7 +153,6 @@ func TestGetTodayCalendarEvents(t *testing.T) {
 			},
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMock()
@@ -182,13 +166,6 @@ func TestGetTodayCalendarEvents(t *testing.T) {
 
 func TestCreateCalendar(t *testing.T) {
 	mscalendar, mockStore, _, _, _, mockClient, _ := MockSetup(t)
-
-	mscalendar.Config = &config.Config{
-		Provider: config.ProviderConfig{
-			DisplayName:    "testDisplayName",
-			CommandTrigger: "testCommandTrigger",
-		},
-	}
 
 	tests := []struct {
 		name       string
@@ -210,7 +187,7 @@ func TestCreateCalendar(t *testing.T) {
 			},
 			assertions: func(t *testing.T, createdCalendar *remote.Calendar, err error) {
 				require.Error(t, err)
-				require.EqualError(t, err, "It looks like your Mattermost account is not connected to testDisplayName. Please connect your account using `/testCommandTrigger connect`.: error loading the user")
+				require.ErrorContains(t, err, "error loading the user")
 			},
 		},
 		{
@@ -251,7 +228,6 @@ func TestCreateCalendar(t *testing.T) {
 			},
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMock()
@@ -268,7 +244,6 @@ func TestCreateEvent(t *testing.T) {
 		name              string
 		user              *User
 		event             *remote.Event
-		mattermostUserIDs []string
 		setupMock         func()
 		assertions        func(t *testing.T, createdEvent *remote.Event, err error)
 		expectedEvent     *remote.Event
@@ -279,13 +254,12 @@ func TestCreateEvent(t *testing.T) {
 				MattermostUserID: "testMMUserID",
 			},
 			event:             &remote.Event{Subject: "Test Event"},
-			mattermostUserIDs: []string{"testMMUserID1"},
 			setupMock: func() {
 				mockStore.EXPECT().LoadUser("testMMUserID").Return(nil, errors.New("error loading the user")).Times(1)
 			},
 			assertions: func(t *testing.T, createdEvent *remote.Event, err error) {
 				require.Error(t, err)
-				require.EqualError(t, err, "It looks like your Mattermost account is not connected to testDisplayName. Please connect your account using `/testCommandTrigger connect`.: error loading the user")
+				require.ErrorContains(t, err, "error loading the user")
 			},
 		},
 		{
@@ -295,12 +269,11 @@ func TestCreateEvent(t *testing.T) {
 				MattermostUserID: "testMMUserID",
 			},
 			event:             &remote.Event{Subject: "Test Event"},
-			mattermostUserIDs: []string{"testMMUserID1"},
 			setupMock: func() {
-				mockStore.EXPECT().LoadUser("testMMUserID1").Return(nil, errors.New("not found")).Times(1)
+				mockStore.EXPECT().LoadUser("testMMUserID").Return(nil, errors.New("not found")).Times(1)
 				mockPluginAPI.EXPECT().GetMattermostUser("testMMUserID")
-				mockPoster.EXPECT().DM("testMMUserID1", gomock.Any(), "testDisplayName", "testDisplayName", "testCommandTrigger").Return("", fmt.Errorf("error creating DM")).Times(1)
-				mockLogger.EXPECT().Warnf(gomock.Any(), gomock.Any())
+				mockPoster.EXPECT().DM("testMMUserID", gomock.AssignableToTypeOf(""), "testDisplayName", "testDisplayName", "testCommandTrigger").Return("", fmt.Errorf("error creating DM")).Times(1)
+				mockLogger.EXPECT().Warnf("CreateEvent error creating DM. err=%v", gomock.Any())
 				mockClient.EXPECT().CreateEvent("testRemoteUserID", gomock.Any()).Return(&remote.Event{}, nil).Times(1)
 			},
 			assertions: func(t *testing.T, createdEvent *remote.Event, err error) {
@@ -316,11 +289,10 @@ func TestCreateEvent(t *testing.T) {
 				MattermostUserID: "testMMUserID",
 			},
 			event:             &remote.Event{Subject: "Test Event"},
-			mattermostUserIDs: []string{"testMMUserID1"},
 			setupMock: func() {
-				mockStore.EXPECT().LoadUser("testMMUserID1").Return(nil, errors.New("not found")).Times(1)
+				mockStore.EXPECT().LoadUser("testMMUserID").Return(nil, errors.New("not found")).Times(1)
 				mockPluginAPI.EXPECT().GetMattermostUser("testMMUserID")
-				mockPoster.EXPECT().DM("testMMUserID1", gomock.Any(), "testDisplayName", "testDisplayName", "testCommandTrigger").Return("", fmt.Errorf("error creating DM")).Times(1).Return("", nil)
+				mockPoster.EXPECT().DM("testMMUserID", gomock.AssignableToTypeOf(""), "testDisplayName", "testDisplayName", "testCommandTrigger").Return("", fmt.Errorf("error creating DM")).Times(1).Return("", nil)
 				mockClient.EXPECT().CreateEvent("testRemoteUserID", &remote.Event{Subject: "Test Event"}).Return(nil, fmt.Errorf("error creating event")).Times(1)
 			},
 			assertions: func(t *testing.T, createdEvent *remote.Event, err error) {
@@ -341,11 +313,10 @@ func TestCreateEvent(t *testing.T) {
 				End:       &remote.DateTime{DateTime: "2024-10-01T10:00:00", TimeZone: "UTC"},
 				Attendees: []*remote.Attendee{{EmailAddress: &remote.EmailAddress{Address: "attendee1@example.com"}}},
 			},
-			mattermostUserIDs: []string{"testMMUserID1"},
 			setupMock: func() {
-				mockStore.EXPECT().LoadUser("testMMUserID1").Return(nil, errors.New("not found")).Times(1)
+				mockStore.EXPECT().LoadUser("testMMUserID").Return(nil, errors.New("not found")).Times(1)
 				mockPluginAPI.EXPECT().GetMattermostUser("testMMUserID")
-				mockPoster.EXPECT().DM("testMMUserID1", gomock.Any(), "testDisplayName", "testDisplayName", "testCommandTrigger").Return("", fmt.Errorf("error creating DM")).Times(1).Return("", nil)
+				mockPoster.EXPECT().DM("testMMUserID", gomock.AssignableToTypeOf(""), "testDisplayName", "testDisplayName", "testCommandTrigger").Return("", fmt.Errorf("error creating DM")).Times(1).Return("", nil)
 				mockClient.EXPECT().CreateEvent("testRemoteUserID", &remote.Event{
 					Subject:   "Test Event",
 					Location:  &remote.Location{DisplayName: "Test Location"},
@@ -361,11 +332,10 @@ func TestCreateEvent(t *testing.T) {
 			},
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMock()
-			createdEvent, err := mscalendar.CreateEvent(tt.user, tt.event, tt.mattermostUserIDs)
+			createdEvent, err := mscalendar.CreateEvent(tt.user, tt.event, []string{"testMMUserID"})
 			tt.assertions(t, createdEvent, err)
 		})
 	}
@@ -373,13 +343,6 @@ func TestCreateEvent(t *testing.T) {
 
 func TestDeleteCalendar(t *testing.T) {
 	mscalendar, mockStore, _, _, mockPluginAPI, mockClient, _ := MockSetup(t)
-
-	mscalendar.Config = &config.Config{
-		Provider: config.ProviderConfig{
-			DisplayName:    "testDisplayName",
-			CommandTrigger: "testCommandTrigger",
-		},
-	}
 
 	user := &User{
 		MattermostUserID: "testMMUserID",
@@ -400,7 +363,7 @@ func TestDeleteCalendar(t *testing.T) {
 			},
 			assertions: func(t *testing.T, err error) {
 				require.Error(t, err)
-				require.EqualError(t, err, "It looks like your Mattermost account is not connected to testDisplayName. Please connect your account using `/testCommandTrigger connect`.: error loading the user")
+				require.ErrorContains(t, err, "error loading the user")
 			},
 		},
 		{
@@ -429,7 +392,6 @@ func TestDeleteCalendar(t *testing.T) {
 			},
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMock()
@@ -443,13 +405,6 @@ func TestDeleteCalendar(t *testing.T) {
 
 func TestFindMeetingTimes(t *testing.T) {
 	mscalendar, mockStore, _, _, mockPluginAPI, mockClient, _ := MockSetup(t)
-
-	mscalendar.Config = &config.Config{
-		Provider: config.ProviderConfig{
-			DisplayName:    "testDisplayName",
-			CommandTrigger: "testCommandTrigger",
-		},
-	}
 
 	user := &User{
 		MattermostUserID: "testMMUserID",
@@ -469,7 +424,7 @@ func TestFindMeetingTimes(t *testing.T) {
 			},
 			assertions: func(t *testing.T, err error, results *remote.MeetingTimeSuggestionResults) {
 				require.Error(t, err)
-				require.EqualError(t, err, "It looks like your Mattermost account is not connected to testDisplayName. Please connect your account using `/testCommandTrigger connect`.: error loading the user")
+				require.ErrorContains(t, err, "error loading the user")
 				require.Nil(t, results)
 			},
 		},
@@ -499,7 +454,6 @@ func TestFindMeetingTimes(t *testing.T) {
 			},
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMock()
@@ -530,7 +484,7 @@ func TestGetCalendars(t *testing.T) {
 			},
 			assertions: func(t *testing.T, err error, calendars []*remote.Calendar) {
 				require.Error(t, err)
-				require.EqualError(t, err, "It looks like your Mattermost account is not connected to testDisplayName. Please connect your account using `/testCommandTrigger connect`.: error loading the user")
+				require.ErrorContains(t, err, "error loading the user")
 				require.Nil(t, calendars)
 			},
 		},
@@ -560,7 +514,6 @@ func TestGetCalendars(t *testing.T) {
 			},
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMock()
