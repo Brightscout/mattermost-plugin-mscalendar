@@ -21,12 +21,12 @@ func TestAcceptEvent(t *testing.T) {
 	}
 
 	tests := []struct {
-		name                 string
-		setupMock            func()
-		assertion            func(err error)
+		name      string
+		setupMock func()
+		assertion func(err error)
 	}{
 		{
-			name:    "error filtering with user",
+			name: "error filtering with user",
 			setupMock: func() {
 				user.User = nil
 				mockStore.EXPECT().LoadUser("testMMUserID").Return(nil, errors.New("error filtering user")).Times(1)
@@ -37,7 +37,7 @@ func TestAcceptEvent(t *testing.T) {
 			},
 		},
 		{
-			name:    "error accepting event",
+			name: "error accepting event",
 			setupMock: func() {
 				user.User = &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}}
 				mockPluginAPI.EXPECT().GetMattermostUser("testMMUserID")
@@ -49,7 +49,7 @@ func TestAcceptEvent(t *testing.T) {
 			},
 		},
 		{
-			name:    "successful event acceptance",
+			name: "successful event acceptance",
 			setupMock: func() {
 				user.User = &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}}
 				mockPluginAPI.EXPECT().GetMattermostUser("testMMUserID")
@@ -80,12 +80,12 @@ func TestDeclineEvent(t *testing.T) {
 	}
 
 	tests := []struct {
-		name                 string
-		setupMock            func()
-		assertion            func(err error)
+		name      string
+		setupMock func()
+		assertion func(err error)
 	}{
 		{
-			name:    "error filtering with user",
+			name: "error filtering with user",
 			setupMock: func() {
 				user.User = nil
 				mockStore.EXPECT().LoadUser("testMMUserID").Return(nil, errors.New("error filtering user")).Times(1)
@@ -96,7 +96,7 @@ func TestDeclineEvent(t *testing.T) {
 			},
 		},
 		{
-			name:    "error declining event",
+			name: "error declining event",
 			setupMock: func() {
 				user.User = &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}}
 				mockPluginAPI.EXPECT().GetMattermostUser("testMMUserID")
@@ -108,7 +108,7 @@ func TestDeclineEvent(t *testing.T) {
 			},
 		},
 		{
-			name:    "successful event decline",
+			name: "successful event decline",
 			setupMock: func() {
 				user.User = &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}}
 				mockPluginAPI.EXPECT().GetMattermostUser("testMMUserID")
@@ -139,12 +139,12 @@ func TestTentativelyAcceptEvent(t *testing.T) {
 	}
 
 	tests := []struct {
-		name                 string
-		setupMock            func()
-		assertion            func(err error)
+		name      string
+		setupMock func()
+		assertion func(err error)
 	}{
 		{
-			name:    "error filtering with user",
+			name: "error filtering with user",
 			setupMock: func() {
 				user.User = nil
 				mockStore.EXPECT().LoadUser("testMMUserID").Return(nil, errors.New("error filtering user")).Times(1)
@@ -155,7 +155,7 @@ func TestTentativelyAcceptEvent(t *testing.T) {
 			},
 		},
 		{
-			name:    "error tentatively accepting event",
+			name: "error tentatively accepting event",
 			setupMock: func() {
 				user.User = &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}}
 				mockPluginAPI.EXPECT().GetMattermostUser("testMMUserID")
@@ -167,7 +167,7 @@ func TestTentativelyAcceptEvent(t *testing.T) {
 			},
 		},
 		{
-			name:    "successful tentative event acceptance",
+			name: "successful tentative event acceptance",
 			setupMock: func() {
 				user.User = &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}}
 				mockPluginAPI.EXPECT().GetMattermostUser("testMMUserID")
@@ -198,15 +198,15 @@ func TestRespondToEvent(t *testing.T) {
 	}
 
 	tests := []struct {
-		name                 string
-		response             string
-		setupMock            func()
-		assertion            func(err error)
+		name      string
+		response  string
+		setupMock func()
+		assertion func(err error)
 	}{
 		{
-			name:                 "invalid response error",
-			response:             OptionNotResponded,
-			setupMock:            func() {},
+			name:      "invalid response error",
+			response:  OptionNotResponded,
+			setupMock: func() {},
 			assertion: func(err error) {
 				require.Error(t, err)
 				require.EqualError(t, err, "not responded is not a valid response")
