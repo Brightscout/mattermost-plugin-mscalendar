@@ -836,6 +836,153 @@ func TestStoreUserCustomStatusUpdates(t *testing.T) {
 	}
 }
 
+func TestUserIndex_ByMattermostID(t *testing.T) {
+	index := UserIndex{
+		&UserShort{MattermostUserID: "user1"},
+		&UserShort{MattermostUserID: "user2"},
+	}
+
+	result := index.ByMattermostID()
+	require.Len(t, result, 2)
+	require.Contains(t, result, "user1")
+	require.Contains(t, result, "user2")
+}
+
+func TestUserIndex_ByRemoteID(t *testing.T) {
+	index := UserIndex{
+		&UserShort{RemoteID: "remote1"},
+		&UserShort{RemoteID: "remote2"},
+	}
+
+	result := index.ByRemoteID()
+	require.Len(t, result, 2)
+	require.Contains(t, result, "remote1")
+	require.Contains(t, result, "remote2")
+}
+
+func TestUserIndex_ByEmail(t *testing.T) {
+	index := UserIndex{
+		&UserShort{Email: "user1@example.com"},
+		&UserShort{Email: "user2@example.com"},
+	}
+
+	result := index.ByEmail()
+	require.Len(t, result, 2)
+	require.Contains(t, result, "user1@example.com")
+	require.Contains(t, result, "user2@example.com")
+}
+
+func TestUserIndex_GetMattermostUserIDs(t *testing.T) {
+	index := UserIndex{
+		&UserShort{MattermostUserID: "user1"},
+		&UserShort{MattermostUserID: "user2"},
+	}
+
+	result := index.GetMattermostUserIDs()
+	require.Len(t, result, 2)
+	require.Contains(t, result, "user1")
+	require.Contains(t, result, "user2")
+}
+
+func TestIsConfiguredForStatusUpdates(t *testing.T) {
+	tests := []struct {
+		name           string
+		settings       Settings
+		expectedResult bool
+	}{
+		{
+			name: "UpdateStatusFromOptions is AwayStatusOption",
+			settings: Settings{
+				UpdateStatusFromOptions: AwayStatusOption,
+			},
+			expectedResult: true,
+		},
+		{
+			name: "UpdateStatusFromOptions is DNDStatusOption",
+			settings: Settings{
+				UpdateStatusFromOptions: DNDStatusOption,
+			},
+			expectedResult: true,
+		},
+		{
+			name: "UpdateStatusFromOptions is empty, UpdateStatus is true, notifications during meeting are false",
+			settings: Settings{
+				UpdateStatusFromOptions:           "",
+				UpdateStatus:                      true,
+				ReceiveNotificationsDuringMeeting: false,
+			},
+			expectedResult: true,
+		},
+		{
+			name: "UpdateStatusFromOptions is empty, UpdateStatus is true, notifications during meeting are true",
+			settings: Settings{
+				UpdateStatusFromOptions:           "",
+				UpdateStatus:                      true,
+				ReceiveNotificationsDuringMeeting: true,
+			},
+			expectedResult: true,
+		},
+		{
+			name: "UpdateStatusFromOptions is empty, UpdateStatus is false",
+			settings: Settings{
+				UpdateStatusFromOptions: "",
+				UpdateStatus:            false,
+			},
+			expectedResult: false,
+		},
+		{
+			name: "UpdateStatusFromOptions is not configured",
+			settings: Settings{
+				UpdateStatusFromOptions: "other",
+			},
+			expectedResult: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			user := &User{
+				Settings: tt.settings,
+			}
+
+			result := user.IsConfiguredForStatusUpdates()
+			require.Equal(t, tt.expectedResult, result)
+		})
+	}
+}
+
+func TestIsConfiguredForCustomStatusUpdates(t *testing.T) {
+	tests := []struct {
+		name           string
+		settings       Settings
+		expectedResult bool
+	}{
+		{
+			name: "Custom status is configured",
+			settings: Settings{
+				SetCustomStatus: true,
+			},
+			expectedResult: true,
+		},
+		{
+			name: "Custom status is not configured",
+			settings: Settings{
+				SetCustomStatus: false,
+			},
+			expectedResult: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			user := &User{
+				Settings: tt.settings,
+			}
+
+			result := user.IsConfiguredForCustomStatusUpdates()
+			require.Equal(t, tt.expectedResult, result, "Expected %v but got %v", tt.expectedResult, result)
+		})
+	}
+}
+
 func MockStoreSetup(t *testing.T) (*testutil.MockPluginAPI, Store) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
