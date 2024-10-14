@@ -3,24 +3,16 @@ package store
 import (
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/mattermost/mattermost/server/public/model"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/testutil"
-	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/tracker/mock_tracker"
-	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/bot/mock_bot"
 )
 
 func TestLoadUserWelcomePost(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	mockLogger := mock_bot.NewMockLogger(ctrl)
-	mockTracker := mock_tracker.NewMockTracker(ctrl)
-	mockAPI := &testutil.MockPluginAPI{}
-	store := NewPluginStore(mockAPI, mockLogger, mockTracker, false, nil)
+	mockAPI, store := MockStoreSetup(t)
 
 	tests := []struct {
 		name       string
@@ -63,12 +55,7 @@ func TestLoadUserWelcomePost(t *testing.T) {
 }
 
 func TestStoreUserWelcomePost(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	mockLogger := mock_bot.NewMockLogger(ctrl)
-	mockTracker := mock_tracker.NewMockTracker(ctrl)
-	mockAPI := &testutil.MockPluginAPI{}
-	store := NewPluginStore(mockAPI, mockLogger, mockTracker, false, nil)
+	mockAPI, store := MockStoreSetup(t)
 
 	tests := []struct {
 		name       string
@@ -109,12 +96,7 @@ func TestStoreUserWelcomePost(t *testing.T) {
 }
 
 func TestDeleteUserWelcomePost(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	mockLogger := mock_bot.NewMockLogger(ctrl)
-	mockTracker := mock_tracker.NewMockTracker(ctrl)
-	mockAPI := &testutil.MockPluginAPI{}
-	store := NewPluginStore(mockAPI, mockLogger, mockTracker, false, nil)
+	mockAPI, store := MockStoreSetup(t)
 
 	tests := []struct {
 		name       string
