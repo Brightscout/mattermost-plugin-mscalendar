@@ -22,22 +22,16 @@ import (
 func TestExpandUser(t *testing.T) {
 	mscalendar, mockStore, _, _, mockPluginAPI, _, _ := MockSetup(t)
 
-	user := &User{
-		User:             &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}},
-		MattermostUserID: "testMMUserID",
-	}
+	user := &User{MattermostUserID: "testMMUserID"}
 
 	tests := []struct {
 		name       string
-		eventID    string
 		setupMock  func()
 		assertions func(t *testing.T, err error)
 	}{
 		{
-			name:    "error expanding remote user",
-			eventID: "testEventID",
+			name: "error expanding remote user",
 			setupMock: func() {
-				user.User = nil
 				mockStore.EXPECT().LoadUser("testMMUserID").Return(nil, errors.New("error filtering user")).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
@@ -46,25 +40,19 @@ func TestExpandUser(t *testing.T) {
 			},
 		},
 		{
-			name:    "error expanding mattermost user",
-			eventID: "testEventID",
+			name: "error expanding Mattermost user",
 			setupMock: func() {
-				user.User = nil
-				user.MattermostUser = nil
 				mockStore.EXPECT().LoadUser("testMMUserID").Return(&store.User{}, nil).Times(1)
-				mockPluginAPI.EXPECT().GetMattermostUser("testMMUserID").Return(nil, errors.New("some error occurred while getting mattermost user"))
+				mockPluginAPI.EXPECT().GetMattermostUser("testMMUserID").Return(nil, errors.New("some error occurred while getting Mattermost user"))
 			},
 			assertions: func(t *testing.T, err error) {
 				require.Error(t, err)
-				require.EqualError(t, err, "some error occurred while getting mattermost user")
+				require.EqualError(t, err, "some error occurred while getting Mattermost user")
 			},
 		},
 		{
-			name:    "success expanding user",
-			eventID: "testEventID",
+			name: "success expanding user",
 			setupMock: func() {
-				user.User = nil
-				user.MattermostUser = nil
 				mockStore.EXPECT().LoadUser("testMMUserID").Return(&store.User{}, nil).Times(1)
 				mockPluginAPI.EXPECT().GetMattermostUser("testMMUserID").Return(&model.User{}, nil)
 			},
@@ -73,7 +61,6 @@ func TestExpandUser(t *testing.T) {
 			},
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMock()
@@ -88,22 +75,16 @@ func TestExpandUser(t *testing.T) {
 func TestExpandRemoteUser(t *testing.T) {
 	mscalendar, mockStore, _, _, _, _, _ := MockSetup(t)
 
-	user := &User{
-		User:             &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}},
-		MattermostUserID: "testMMUserID",
-	}
+	user := &User{MattermostUserID: "testMMUserID"}
 
 	tests := []struct {
 		name       string
-		eventID    string
 		setupMock  func()
 		assertions func(t *testing.T, err error)
 	}{
 		{
-			name:    "error loading remote user",
-			eventID: "testEventID",
+			name: "error loading remote user",
 			setupMock: func() {
-				user.User = nil
 				mockStore.EXPECT().LoadUser("testMMUserID").Return(nil, errors.New("error filtering user")).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
@@ -112,10 +93,8 @@ func TestExpandRemoteUser(t *testing.T) {
 			},
 		},
 		{
-			name:    "success expanding remote user",
-			eventID: "testEventID",
+			name: "success expanding remote user",
 			setupMock: func() {
-				user.User = nil
 				mockStore.EXPECT().LoadUser("testMMUserID").Return(&store.User{}, nil).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
@@ -123,7 +102,6 @@ func TestExpandRemoteUser(t *testing.T) {
 			},
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMock()
@@ -137,36 +115,26 @@ func TestExpandRemoteUser(t *testing.T) {
 
 func TestExpandMattermostUser(t *testing.T) {
 	mscalendar, _, _, _, mockPluginAPI, _, _ := MockSetup(t)
-	user := &User{
-		User:             &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}},
-		MattermostUserID: "testMMUserID",
-	}
+	user := &User{MattermostUserID: "testMMUserID"}
 
 	tests := []struct {
 		name       string
-		eventID    string
 		setupMock  func()
 		assertions func(t *testing.T, err error)
 	}{
 		{
-			name:    "error expanding mattermost user",
-			eventID: "testEventID",
+			name: "error expanding Mattermost user",
 			setupMock: func() {
-				user.User = nil
-				user.MattermostUser = nil
-				mockPluginAPI.EXPECT().GetMattermostUser("testMMUserID").Return(nil, errors.New("some error occurred while getting mattermost user"))
+				mockPluginAPI.EXPECT().GetMattermostUser("testMMUserID").Return(nil, errors.New("some error occurred while getting Mattermost user"))
 			},
 			assertions: func(t *testing.T, err error) {
 				require.Error(t, err)
-				require.EqualError(t, err, "some error occurred while getting mattermost user")
+				require.EqualError(t, err, "some error occurred while getting Mattermost user")
 			},
 		},
 		{
-			name:    "success expanding mattermost user",
-			eventID: "testEventID",
+			name: "success expanding Mattermost user",
 			setupMock: func() {
-				user.User = nil
-				user.MattermostUser = nil
 				mockPluginAPI.EXPECT().GetMattermostUser("testMMUserID").Return(&model.User{}, nil)
 			},
 			assertions: func(t *testing.T, err error) {
@@ -174,7 +142,6 @@ func TestExpandMattermostUser(t *testing.T) {
 			},
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMock()
@@ -189,22 +156,16 @@ func TestExpandMattermostUser(t *testing.T) {
 func TestGetTimezone(t *testing.T) {
 	mscalendar, mockStore, _, _, _, mockClient, _ := MockSetup(t)
 
-	user := &User{
-		User:             &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}},
-		MattermostUserID: "testMMUserID",
-	}
+	user := &User{MattermostUserID: "testMMUserID"}
 
 	tests := []struct {
 		name       string
-		eventID    string
 		setupMock  func()
 		assertions func(t *testing.T, err error)
 	}{
 		{
-			name:    "error loading remote user",
-			eventID: "testEventID",
+			name: "error loading remote user",
 			setupMock: func() {
-				user.User = nil
 				mockStore.EXPECT().LoadUser("testMMUserID").Return(nil, errors.New("error filtering user")).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
@@ -213,8 +174,7 @@ func TestGetTimezone(t *testing.T) {
 			},
 		},
 		{
-			name:    "error getting mailbox setting",
-			eventID: "testEventID",
+			name: "error getting mailbox setting",
 			setupMock: func() {
 				user.User = &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}}
 				mockClient.EXPECT().GetMailboxSettings("testRemoteID").Return(nil, errors.New("error occurred getting mailbox settings"))
@@ -225,8 +185,7 @@ func TestGetTimezone(t *testing.T) {
 			},
 		},
 		{
-			name:    "success getting mailbox setting",
-			eventID: "testEventID",
+			name: "success getting mailbox setting",
 			setupMock: func() {
 				user.User = &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}}
 				mockClient.EXPECT().GetMailboxSettings("testRemoteID").Return(&remote.MailboxSettings{TimeZone: "mockTimeZone"}, nil)
@@ -236,7 +195,6 @@ func TestGetTimezone(t *testing.T) {
 			},
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMock()
@@ -257,30 +215,29 @@ func TestUser_String(t *testing.T) {
 		{
 			name: "User with Mattermost user object",
 			user: &User{
-				MattermostUserID: "user-id-1",
+				MattermostUserID: "mockMMUserID",
 				MattermostUser: &model.User{
-					Username: "johndoe",
+					Username: "mockMMUsername",
 				},
 			},
 			assertions: func(t *testing.T, actualString string) {
-				require.Equal(t, "@johndoe", actualString)
+				require.Equal(t, "@mockMMUsername", actualString)
 			},
 		},
 		{
 			name: "User without Mattermost user object",
 			user: &User{
-				MattermostUserID: "user-id-2",
-				MattermostUser:   nil,
+				MattermostUserID: "mockMMUserID",
 			},
 			assertions: func(t *testing.T, actualString string) {
-				require.Equal(t, "user-id-2", actualString)
+				require.Equal(t, "mockMMUserID", actualString)
 			},
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			actualString := tt.user.String()
+
 			tt.assertions(t, actualString)
 		})
 	}
@@ -295,30 +252,29 @@ func TestUser_Markdown(t *testing.T) {
 		{
 			name: "User with Mattermost user object",
 			user: &User{
-				MattermostUserID: "user-id-1",
+				MattermostUserID: "mockMMUserID",
 				MattermostUser: &model.User{
-					Username: "johndoe",
+					Username: "mockMMUsername",
 				},
 			},
 			assertions: func(t *testing.T, actualOutput string) {
-				require.Equal(t, "@johndoe", actualOutput)
+				require.Equal(t, "@mockMMUsername", actualOutput)
 			},
 		},
 		{
 			name: "User without Mattermost user object",
 			user: &User{
-				MattermostUserID: "user-id-2",
-				MattermostUser:   nil,
+				MattermostUserID: "mockMMUserID",
 			},
 			assertions: func(t *testing.T, actualOutput string) {
-				require.Equal(t, "UserID: `user-id-2`", actualOutput)
+				require.Equal(t, "UserID: `mockMMUserID`", actualOutput)
 			},
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			actualOutput := tt.user.Markdown()
+
 			tt.assertions(t, actualOutput)
 		})
 	}
@@ -362,15 +318,11 @@ func TestDisconnectUser(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		MMUserID   string
-		eventID    string
 		setupMock  func()
 		assertions func(err error)
 	}{
 		{
-			name:     "error filtering user",
-			MMUserID: "mockMMUserID",
-			eventID:  "testEventID",
+			name: "error filtering user",
 			setupMock: func() {
 				mscalendar.client = nil
 				mscalendar.actingUser = &User{MattermostUserID: "mockRemoteMMUserID"}
@@ -383,9 +335,7 @@ func TestDisconnectUser(t *testing.T) {
 			},
 		},
 		{
-			name:     "error loading user",
-			MMUserID: "mockMMUserID",
-			eventID:  "testEventID",
+			name: "error loading user",
 			setupMock: func() {
 				mscalendar.client = mockClient
 				mscalendar.actingUser = &User{MattermostUserID: "mockRemoteMMUserID"}
@@ -398,9 +348,7 @@ func TestDisconnectUser(t *testing.T) {
 			},
 		},
 		{
-			name:     "error deleting linked channels from events",
-			MMUserID: "mockMMUserID",
-			eventID:  "testEventID",
+			name: "error deleting linked channels from events",
 			setupMock: func() {
 				mscalendar.client = mockClient
 				mscalendar.actingUser = &User{MattermostUserID: "mockRemoteMMUserID"}
@@ -417,9 +365,7 @@ func TestDisconnectUser(t *testing.T) {
 			},
 		},
 		{
-			name:     "error loading subscription",
-			MMUserID: "mockMMUserID",
-			eventID:  "testEventID",
+			name: "error loading subscription",
 			setupMock: func() {
 				mscalendar.client = mockClient
 				mscalendar.actingUser = &User{MattermostUserID: "mockRemoteMMUserID"}
@@ -433,9 +379,7 @@ func TestDisconnectUser(t *testing.T) {
 			},
 		},
 		{
-			name:     "failed to delete event subscription",
-			MMUserID: "mockMMUserID",
-			eventID:  "testEventID",
+			name: "failed to delete event subscription",
 			setupMock: func() {
 				mscalendar.client = mockClient
 				mscalendar.actingUser = &User{MattermostUserID: "mockRemoteMMUserID"}
@@ -450,9 +394,7 @@ func TestDisconnectUser(t *testing.T) {
 			},
 		},
 		{
-			name:     "error deleting user",
-			MMUserID: "mockMMUserID",
-			eventID:  "testEventID",
+			name: "error deleting user",
 			setupMock: func() {
 				mscalendar.client = mockClient
 				mscalendar.actingUser = &User{MattermostUserID: "mockRemoteMMUserID"}
@@ -469,9 +411,7 @@ func TestDisconnectUser(t *testing.T) {
 			},
 		},
 		{
-			name:     "error deleting user from index",
-			MMUserID: "mockMMUserID",
-			eventID:  "testEventID",
+			name: "error deleting user from index",
 			setupMock: func() {
 				mscalendar.client = mockClient
 				mscalendar.actingUser = &User{MattermostUserID: "mockRemoteMMUserID"}
@@ -489,9 +429,7 @@ func TestDisconnectUser(t *testing.T) {
 			},
 		},
 		{
-			name:     "user disconnected successfully",
-			MMUserID: "mockMMUserID",
-			eventID:  "testEventID",
+			name: "user disconnected successfully",
 			setupMock: func() {
 				mscalendar.client = mockClient
 				mscalendar.actingUser = &User{MattermostUserID: "mockRemoteMMUserID"}
@@ -508,12 +446,11 @@ func TestDisconnectUser(t *testing.T) {
 			},
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMock()
 
-			err := mscalendar.DisconnectUser(tt.MMUserID)
+			err := mscalendar.DisconnectUser("mockMMUserID")
 
 			tt.assertions(err)
 		})
@@ -525,15 +462,13 @@ func TestGetRemoteUser(t *testing.T) {
 
 	tests := []struct {
 		name                 string
-		mattermostUserID     string
 		setupMock            func()
 		expectedRemoteUser   *remote.User
 		expectedErrorMessage string
 		assertions           func(remoteUser *remote.User, err error)
 	}{
 		{
-			name:             "LoadUser returns an error",
-			mattermostUserID: "mockMMUserID",
+			name: "LoadUser returns an error",
 			setupMock: func() {
 				mockStore.EXPECT().LoadUser("mockMMUserID").Return(nil, errors.New("failed to load user")).Times(1)
 			},
@@ -546,8 +481,7 @@ func TestGetRemoteUser(t *testing.T) {
 			},
 		},
 		{
-			name:             "Successfully get remote user",
-			mattermostUserID: "mockMMUserID",
+			name: "Successfully get remote user",
 			setupMock: func() {
 				mockStore.EXPECT().LoadUser("mockMMUserID").Return(&store.User{Remote: &remote.User{ID: "mockRemoteUserID"}}, nil).Times(1)
 			},
@@ -558,12 +492,11 @@ func TestGetRemoteUser(t *testing.T) {
 			},
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMock()
 
-			remoteUser, err := mscalendar.GetRemoteUser(tt.mattermostUserID)
+			remoteUser, err := mscalendar.GetRemoteUser("mockMMUserID")
 
 			tt.assertions(remoteUser, err)
 		})
@@ -632,7 +565,6 @@ func TestIsAuthorizedAdmin(t *testing.T) {
 			},
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMock()
@@ -647,24 +579,18 @@ func TestIsAuthorizedAdmin(t *testing.T) {
 func TestGetUserSettings(t *testing.T) {
 	mscalendar, mockStore, _, _, mockPluginAPI, _, _ := MockSetup(t)
 
-	user := &User{
-		User:             &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}},
-		MattermostUserID: "testMMUserID",
-	}
+	user := &User{MattermostUserID: "testMMUserID"}
 
 	tests := []struct {
 		name                 string
-		mattermostUserID     string
 		setupMock            func()
 		expectedSetting      *store.Settings
 		expectedErrorMessage string
 		assertions           func(result *store.Settings, err error)
 	}{
 		{
-			name:             "error filtering the user",
-			mattermostUserID: "mockAdminID1",
+			name: "error filtering the user",
 			setupMock: func() {
-				user.User = nil
 				mockStore.EXPECT().LoadUser("testMMUserID").Return(nil, errors.New("error filtering user")).Times(1)
 			},
 			expectedErrorMessage: "It looks like your Mattermost account is not connected to testDisplayName. Please connect your account using `/testCommandTrigger connect`.: error filtering user",
@@ -674,8 +600,7 @@ func TestGetUserSettings(t *testing.T) {
 			},
 		},
 		{
-			name:             "Successfully get user settings",
-			mattermostUserID: "mockAdminID1",
+			name: "Successfully get user settings",
 			setupMock: func() {
 				user.User = &store.User{Settings: store.Settings{GetConfirmation: false}, Remote: &remote.User{ID: "testRemoteID"}}
 				mockPluginAPI.EXPECT().GetMattermostUser("testMMUserID").Return(&model.User{}, nil)
@@ -687,7 +612,6 @@ func TestGetUserSettings(t *testing.T) {
 			},
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMock()
