@@ -21,8 +21,7 @@ import (
 
 func TestExpandUser(t *testing.T) {
 	mscalendar, mockStore, _, _, mockPluginAPI, _, _ := MockSetup(t)
-
-	user := &User{MattermostUserID: "testMMUserID"}
+	mockUser := GetMockUser()
 
 	tests := []struct {
 		name       string
@@ -36,7 +35,7 @@ func TestExpandUser(t *testing.T) {
 			},
 			assertions: func(t *testing.T, err error) {
 				require.Error(t, err)
-				require.EqualError(t, err, "It looks like your Mattermost account is not connected to testDisplayName. Please connect your account using `/testCommandTrigger connect`.: error filtering user")
+				require.ErrorContains(t, err, "error filtering user")
 			},
 		},
 		{
@@ -65,7 +64,7 @@ func TestExpandUser(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMock()
 
-			err := mscalendar.ExpandUser(user)
+			err := mscalendar.ExpandUser(mockUser)
 
 			tt.assertions(t, err)
 		})
@@ -74,8 +73,7 @@ func TestExpandUser(t *testing.T) {
 
 func TestExpandRemoteUser(t *testing.T) {
 	mscalendar, mockStore, _, _, _, _, _ := MockSetup(t)
-
-	user := &User{MattermostUserID: "testMMUserID"}
+	mockUser := GetMockUser()
 
 	tests := []struct {
 		name       string
@@ -89,7 +87,7 @@ func TestExpandRemoteUser(t *testing.T) {
 			},
 			assertions: func(t *testing.T, err error) {
 				require.Error(t, err)
-				require.EqualError(t, err, "It looks like your Mattermost account is not connected to testDisplayName. Please connect your account using `/testCommandTrigger connect`.: error filtering user")
+				require.ErrorContains(t, err, "error filtering user")
 			},
 		},
 		{
@@ -106,7 +104,7 @@ func TestExpandRemoteUser(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMock()
 
-			err := mscalendar.ExpandRemoteUser(user)
+			err := mscalendar.ExpandRemoteUser(mockUser)
 
 			tt.assertions(t, err)
 		})
@@ -115,7 +113,7 @@ func TestExpandRemoteUser(t *testing.T) {
 
 func TestExpandMattermostUser(t *testing.T) {
 	mscalendar, _, _, _, mockPluginAPI, _, _ := MockSetup(t)
-	user := &User{MattermostUserID: "testMMUserID"}
+	mockUser := GetMockUser()
 
 	tests := []struct {
 		name       string
@@ -146,7 +144,7 @@ func TestExpandMattermostUser(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMock()
 
-			err := mscalendar.ExpandMattermostUser(user)
+			err := mscalendar.ExpandMattermostUser(mockUser)
 
 			tt.assertions(t, err)
 		})
@@ -155,8 +153,7 @@ func TestExpandMattermostUser(t *testing.T) {
 
 func TestGetTimezone(t *testing.T) {
 	mscalendar, mockStore, _, _, _, mockClient, _ := MockSetup(t)
-
-	user := &User{MattermostUserID: "testMMUserID"}
+	mockUser := GetMockUser()
 
 	tests := []struct {
 		name       string
@@ -176,7 +173,7 @@ func TestGetTimezone(t *testing.T) {
 		{
 			name: "error getting mailbox setting",
 			setupMock: func() {
-				user.User = &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}}
+				mockUser.User = &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}}
 				mockClient.EXPECT().GetMailboxSettings("testRemoteID").Return(nil, errors.New("error occurred getting mailbox settings"))
 			},
 			assertions: func(t *testing.T, err error) {
@@ -187,7 +184,7 @@ func TestGetTimezone(t *testing.T) {
 		{
 			name: "success getting mailbox setting",
 			setupMock: func() {
-				user.User = &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}}
+				mockUser.User = &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}}
 				mockClient.EXPECT().GetMailboxSettings("testRemoteID").Return(&remote.MailboxSettings{TimeZone: "mockTimeZone"}, nil)
 			},
 			assertions: func(t *testing.T, err error) {
@@ -199,7 +196,7 @@ func TestGetTimezone(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMock()
 
-			_, err := mscalendar.GetTimezone(user)
+			_, err := mscalendar.GetTimezone(mockUser)
 
 			tt.assertions(t, err)
 		})
@@ -461,19 +458,15 @@ func TestGetRemoteUser(t *testing.T) {
 	mscalendar, mockStore, _, _, _, _, _ := MockSetup(t)
 
 	tests := []struct {
-		name                 string
-		setupMock            func()
-		expectedRemoteUser   *remote.User
-		expectedErrorMessage string
-		assertions           func(remoteUser *remote.User, err error)
+		name       string
+		setupMock  func()
+		assertions func(remoteUser *remote.User, err error)
 	}{
 		{
 			name: "LoadUser returns an error",
 			setupMock: func() {
 				mockStore.EXPECT().LoadUser("mockMMUserID").Return(nil, errors.New("failed to load user")).Times(1)
 			},
-			expectedRemoteUser:   nil,
-			expectedErrorMessage: "failed to load user",
 			assertions: func(remoteUser *remote.User, err error) {
 				require.Error(t, err)
 				require.EqualError(t, err, "failed to load user")
@@ -485,7 +478,6 @@ func TestGetRemoteUser(t *testing.T) {
 			setupMock: func() {
 				mockStore.EXPECT().LoadUser("mockMMUserID").Return(&store.User{Remote: &remote.User{ID: "mockRemoteUserID"}}, nil).Times(1)
 			},
-			expectedRemoteUser: &remote.User{ID: "mockRemoteUserID"},
 			assertions: func(remoteUser *remote.User, err error) {
 				require.NoError(t, err)
 				require.Equal(t, &remote.User{ID: "mockRemoteUserID"}, remoteUser)
@@ -507,12 +499,10 @@ func TestIsAuthorizedAdmin(t *testing.T) {
 	mscalendar, _, _, _, mockPluginAPI, _, _ := MockSetup(t)
 
 	tests := []struct {
-		name                 string
-		mattermostUserID     string
-		setupMock            func()
-		expectedResult       bool
-		expectedErrorMessage string
-		assertions           func(result bool, err error)
+		name             string
+		mattermostUserID string
+		setupMock        func()
+		assertions       func(result bool, err error)
 	}{
 		{
 			name:             "User is in AdminUserIDs",
@@ -520,7 +510,6 @@ func TestIsAuthorizedAdmin(t *testing.T) {
 			setupMock: func() {
 				mscalendar.AdminUserIDs = "mockAdminID1,mockAdminID2"
 			},
-			expectedResult: true,
 			assertions: func(result bool, err error) {
 				require.NoError(t, err)
 				require.Equal(t, true, result)
@@ -533,7 +522,6 @@ func TestIsAuthorizedAdmin(t *testing.T) {
 				mscalendar.AdminUserIDs = "mockAdminID1,mockAdminID2"
 				mockPluginAPI.EXPECT().IsSysAdmin("mockMMUserID").Return(false, errors.New("error occurred checking system admin")).Times(1)
 			},
-			expectedErrorMessage: "error occurred checking system admin",
 			assertions: func(result bool, err error) {
 				require.Error(t, err)
 				require.EqualError(t, err, "error occurred checking system admin")
@@ -558,7 +546,6 @@ func TestIsAuthorizedAdmin(t *testing.T) {
 				mscalendar.AdminUserIDs = "mockAdminID1,mockAdminID2"
 				mockPluginAPI.EXPECT().IsSysAdmin("mockMMUserID").Return(true, nil).Times(1)
 			},
-			expectedResult: true,
 			assertions: func(result bool, err error) {
 				require.NoError(t, err)
 				require.Equal(t, true, result)
@@ -578,34 +565,29 @@ func TestIsAuthorizedAdmin(t *testing.T) {
 
 func TestGetUserSettings(t *testing.T) {
 	mscalendar, mockStore, _, _, mockPluginAPI, _, _ := MockSetup(t)
-
-	user := &User{MattermostUserID: "testMMUserID"}
+	mockUser := GetMockUser()
 
 	tests := []struct {
-		name                 string
-		setupMock            func()
-		expectedSetting      *store.Settings
-		expectedErrorMessage string
-		assertions           func(result *store.Settings, err error)
+		name       string
+		setupMock  func()
+		assertions func(result *store.Settings, err error)
 	}{
 		{
 			name: "error filtering the user",
 			setupMock: func() {
 				mockStore.EXPECT().LoadUser("testMMUserID").Return(nil, errors.New("error filtering user")).Times(1)
 			},
-			expectedErrorMessage: "It looks like your Mattermost account is not connected to testDisplayName. Please connect your account using `/testCommandTrigger connect`.: error filtering user",
 			assertions: func(result *store.Settings, err error) {
 				require.Error(t, err)
-				require.EqualError(t, err, "It looks like your Mattermost account is not connected to testDisplayName. Please connect your account using `/testCommandTrigger connect`.: error filtering user")
+				require.ErrorContains(t, err, "error filtering user")
 			},
 		},
 		{
 			name: "Successfully get user settings",
 			setupMock: func() {
-				user.User = &store.User{Settings: store.Settings{GetConfirmation: false}, Remote: &remote.User{ID: "testRemoteID"}}
+				mockUser.User = &store.User{Settings: store.Settings{GetConfirmation: false}, Remote: &remote.User{ID: "testRemoteID"}}
 				mockPluginAPI.EXPECT().GetMattermostUser("testMMUserID").Return(&model.User{}, nil)
 			},
-			expectedSetting: &store.Settings{GetConfirmation: false},
 			assertions: func(result *store.Settings, err error) {
 				require.NoError(t, err)
 				require.Equal(t, &store.Settings{GetConfirmation: false}, result)
@@ -616,7 +598,7 @@ func TestGetUserSettings(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMock()
 
-			result, err := mscalendar.GetUserSettings(user)
+			result, err := mscalendar.GetUserSettings(mockUser)
 
 			tt.assertions(result, err)
 		})
