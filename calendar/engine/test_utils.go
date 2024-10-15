@@ -18,7 +18,7 @@ import (
 
 const (
 	MockRemoteUserID  = "testRemoteUserID"
-	MockMMModelUserID = "testMMID"
+	MockMMModelUserID = "testMMModelUserID"
 	MockMMUserID      = "testMMUserID"
 
 	MockCalendarName = "Test Calendar"
