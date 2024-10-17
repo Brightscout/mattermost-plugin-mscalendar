@@ -68,7 +68,6 @@ func GetMockSetup(t *testing.T) (*mscalendar, *mock_store.MockStore, *mock_bot.M
 
 func GetMockUser(remoteUserID, mmModelUserID *string, mmUserID string, storeUserSetting *store.Settings) *User {
 	user := (*store.User)(nil)
-
 	switch {
 	case remoteUserID != nil && storeUserSetting != nil:
 		user = &store.User{
@@ -94,6 +93,23 @@ func GetMockUser(remoteUserID, mmModelUserID *string, mmUserID string, storeUser
 		User:             user,
 		MattermostUser:   mmUser,
 		MattermostUserID: mmUserID,
+	}
+}
+
+func GetMockUserWithDefaultDailySummaryUserSettings() *User {
+	return &User{
+		MattermostUserID: MockMMUserID,
+		MattermostUser: &model.User{
+			Id: MockMMModelUserID,
+		},
+		User: &store.User{
+			Remote: &remote.User{
+				ID: MockRemoteUserID,
+			},
+			Settings: store.Settings{
+				DailySummary: store.DefaultDailySummaryUserSettings(),
+			},
+		},
 	}
 }
 
