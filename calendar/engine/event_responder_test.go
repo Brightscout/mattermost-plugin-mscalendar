@@ -10,7 +10,7 @@ import (
 )
 
 func TestAcceptEvent(t *testing.T) {
-	mscalendar, mockStore, _, _, mockPluginAPI, mockClient, _ := MockSetup(t)
+	mscalendar, mockStore, _, _, mockPluginAPI, mockClient, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name      string
@@ -65,7 +65,7 @@ func TestAcceptEvent(t *testing.T) {
 }
 
 func TestDeclineEvent(t *testing.T) {
-	mscalendar, mockStore, _, _, mockPluginAPI, mockClient, _ := MockSetup(t)
+	mscalendar, mockStore, _, _, mockPluginAPI, mockClient, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name      string
@@ -120,7 +120,7 @@ func TestDeclineEvent(t *testing.T) {
 }
 
 func TestTentativelyAcceptEvent(t *testing.T) {
-	mscalendar, mockStore, _, _, mockPluginAPI, mockClient, _ := MockSetup(t)
+	mscalendar, mockStore, _, _, mockPluginAPI, mockClient, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name      string
@@ -175,7 +175,7 @@ func TestTentativelyAcceptEvent(t *testing.T) {
 }
 
 func TestRespondToEvent(t *testing.T) {
-	mscalendar, mockStore, _, _, mockPluginAPI, mockClient, _ := MockSetup(t)
+	mscalendar, mockStore, _, _, mockPluginAPI, mockClient, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name      string

@@ -505,7 +505,7 @@ func TestShouldPostDailySummary(t *testing.T) {
 }
 
 func TestGetDailySummarySettingsForUser(t *testing.T) {
-	mscalendar, mockStore, _, _, mockPluginAPI, _, _ := MockSetup(t)
+	mscalendar, mockStore, _, _, mockPluginAPI, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name      string
@@ -548,7 +548,7 @@ func TestGetDailySummarySettingsForUser(t *testing.T) {
 }
 
 func TestSetDailySummaryPostTime(t *testing.T) {
-	mscalendar, mockStore, _, _, mockPluginAPI, mockClient, _ := MockSetup(t)
+	mscalendar, mockStore, _, _, mockPluginAPI, mockClient, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name       string
@@ -619,7 +619,7 @@ func TestSetDailySummaryPostTime(t *testing.T) {
 }
 
 func TestSetDailySummaryEnabled(t *testing.T) {
-	mscalendar, mockStore, _, _, mockPluginAPI, _, _ := MockSetup(t)
+	mscalendar, mockStore, _, _, mockPluginAPI, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name      string
