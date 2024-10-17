@@ -65,10 +65,13 @@ func GetMockSetup(t *testing.T) (*mscalendar, *mock_store.MockStore, *mock_bot.M
 	return mscalendar, mockStore, mockPoster, mockRemote, mockPluginAPI, mockClient, mockLogger
 }
 
-func GetMockUser(remoteUserID, mmModelUserID *string, mmUserID string) *User {
+func GetMockUser(remoteUserID, mmModelUserID *string, mmUserID string, storeUserSetting *store.Settings) *User {
 	user := (*store.User)(nil)
 	if remoteUserID != nil {
 		user = &store.User{Remote: &remote.User{ID: *remoteUserID}}
+	}
+	if storeUserSetting != nil {
+		user = &store.User{Settings: *storeUserSetting}
 	}
 
 	mmUser := (*model.User)(nil)
