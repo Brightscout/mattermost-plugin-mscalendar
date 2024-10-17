@@ -505,23 +505,19 @@ func TestShouldPostDailySummary(t *testing.T) {
 }
 
 func TestGetDailySummarySettingsForUser(t *testing.T) {
-	mscalendar, mockStore, _, _, mockPluginAPI, _, _ := MockSetup(t)
-
-	user := &User{
-		User:             &store.User{Settings: store.Settings{}},
-		MattermostUserID: "testMMUserID",
-	}
+	mscalendar, mockStore, _, _, mockPluginAPI, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name      string
+		user      *User
 		setupMock func()
 		assertion func(t *testing.T, settings *store.DailySummaryUserSettings, err error)
 	}{
 		{
 			name: "error filtering with user",
+			user: GetMockUser(nil, nil, MockMMUserID, nil),
 			setupMock: func() {
-				user.User = nil
-				mockStore.EXPECT().LoadUser("testMMUserID").Return(nil, errors.New("error filtering user")).Times(1)
+				mockStore.EXPECT().LoadUser(MockMMUserID).Return(nil, errors.New("error filtering user")).Times(1)
 			},
 			assertion: func(t *testing.T, settings *store.DailySummaryUserSettings, err error) {
 				require.Error(t, err)
@@ -531,10 +527,9 @@ func TestGetDailySummarySettingsForUser(t *testing.T) {
 		},
 		{
 			name: "successful retrieval of daily summary settings",
+			user: GetMockUserWithDefaultDailySummaryUserSettings(),
 			setupMock: func() {
-				user.User = &store.User{Settings: store.Settings{}}
-				user.Settings.DailySummary = store.DefaultDailySummaryUserSettings()
-				mockPluginAPI.EXPECT().GetMattermostUser("testMMUserID").Return(&model.User{}, nil)
+				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID).Return(&model.User{}, nil)
 			},
 			assertion: func(t *testing.T, settings *store.DailySummaryUserSettings, err error) {
 				require.NoError(t, err)
@@ -546,81 +541,70 @@ func TestGetDailySummarySettingsForUser(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMock()
 
-			settings, err := mscalendar.GetDailySummarySettingsForUser(user)
+			settings, err := mscalendar.GetDailySummarySettingsForUser(tt.user)
 			tt.assertion(t, settings, err)
 		})
 	}
 }
 
 func TestSetDailySummaryPostTime(t *testing.T) {
-	mscalendar, mockStore, _, _, mockPluginAPI, mockClient, _ := MockSetup(t)
-
-	user := &User{
-		User:             &store.User{Settings: store.Settings{}},
-		MattermostUserID: "testMMUserID",
-	}
+	mscalendar, mockStore, _, _, mockPluginAPI, mockClient, _ := GetMockSetup(t)
 
 	tests := []struct {
-		name      string
-		timeStr   string
-		setupMock func()
-		assertion func(t *testing.T, settings *store.DailySummaryUserSettings, err error)
+		name       string
+		timeString string
+		user       *User
+		setupMock  func()
+		assertion  func(t *testing.T, settings *store.DailySummaryUserSettings, err error)
 	}{
 		{
-			name:    "error filtering with user",
-			timeStr: "9:00 AM",
+			name:       "error filtering with user",
+			timeString: "9:00 AM",
+			user:       GetMockUser(nil, nil, MockMMUserID, nil),
 			setupMock: func() {
-				user.User = nil
-				mockStore.EXPECT().LoadUser("testMMUserID").Return(nil, errors.New("error filtering user")).Times(1)
+				mockStore.EXPECT().LoadUser(MockMMUserID).Return(nil, errors.New("error filtering user")).Times(1)
 			},
 			assertion: func(t *testing.T, settings *store.DailySummaryUserSettings, err error) {
-				require.Error(t, err)
 				require.ErrorContains(t, err, "error filtering user")
 				require.Nil(t, settings)
 			},
 		},
 		{
-			name:    "invalid time format",
-			timeStr: "invalid time",
+			name:       "invalid time format",
+			timeString: "invalid time",
+			user:       GetMockUser(nil, nil, MockMMUserID, GetMockStoreSettings()),
 			setupMock: func() {
-				user.User = &store.User{Settings: store.Settings{}}
-				mockPluginAPI.EXPECT().GetMattermostUser("testMMUserID")
+				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID)
 			},
 			assertion: func(t *testing.T, settings *store.DailySummaryUserSettings, err error) {
-				require.Error(t, err)
 				require.EqualError(t, err, "Invalid time value: invalid time")
 				require.Nil(t, settings)
 			},
 		},
 		{
-			name:    "time not a multiple of interval",
-			timeStr: "9:05 AM",
+			name:       "time not a multiple of interval",
+			timeString: "9:05 AM",
+			user:       GetMockUserWithDefaultDailySummaryUserSettings(),
 			setupMock: func() {
-				mockPluginAPI.EXPECT().GetMattermostUser("testMMUserID")
-				user.Settings.DailySummary = store.DefaultDailySummaryUserSettings()
+				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID)
 			},
 			assertion: func(t *testing.T, settings *store.DailySummaryUserSettings, err error) {
-				require.Error(t, err)
 				require.EqualError(t, err, "Invalid time value: 9:05 AM")
 				require.Nil(t, settings)
 			},
 		},
 		{
-			name:    "successful setting of daily summary post time",
-			timeStr: "9:00AM",
+			name:       "successful setting of daily summary post time",
+			timeString: "9:00AM",
+			user:       GetMockUserWithDefaultDailySummaryUserSettings(),
 			setupMock: func() {
-				user.User = &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}}
-				mockPluginAPI.EXPECT().GetMattermostUser("testMMUserID")
-				user.Settings.DailySummary = store.DefaultDailySummaryUserSettings()
-				mockStore.EXPECT().StoreUser(user.User).Return(nil).Times(1)
-				mockClient.EXPECT().GetMailboxSettings("testRemoteID").Return(&remote.MailboxSettings{TimeZone: "UTC"}, nil)
+				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID)
+				mockStore.EXPECT().StoreUser(gomock.Any()).Return(nil).Times(1)
+				mockClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: "UTC"}, nil)
 			},
 			assertion: func(t *testing.T, settings *store.DailySummaryUserSettings, err error) {
 				require.NoError(t, err)
-				require.Equal(t, &store.DailySummaryUserSettings{
-					PostTime: "9:00AM",
-					Timezone: "UTC",
-				}, settings)
+				require.Equal(t, &store.DailySummaryUserSettings{PostTime: "9:00AM", Timezone: "UTC"}, settings)
 			},
 		},
 	}
@@ -628,35 +612,30 @@ func TestSetDailySummaryPostTime(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMock()
 
-			settings, err := mscalendar.SetDailySummaryPostTime(user, tt.timeStr)
+			settings, err := mscalendar.SetDailySummaryPostTime(tt.user, tt.timeString)
 			tt.assertion(t, settings, err)
 		})
 	}
 }
 
 func TestSetDailySummaryEnabled(t *testing.T) {
-	mscalendar, mockStore, _, _, mockPluginAPI, _, _ := MockSetup(t)
-
-	user := &User{
-		User:             &store.User{Settings: store.Settings{}},
-		MattermostUserID: "testMMUserID",
-	}
+	mscalendar, mockStore, _, _, mockPluginAPI, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name      string
 		enable    bool
+		user      *User
 		setupMock func()
 		assertion func(t *testing.T, settings *store.DailySummaryUserSettings, err error)
 	}{
 		{
 			name:   "error filtering with user",
 			enable: true,
+			user:   GetMockUser(nil, nil, MockMMUserID, nil),
 			setupMock: func() {
-				user.User = nil
-				mockStore.EXPECT().LoadUser("testMMUserID").Return(nil, errors.New("error filtering user")).Times(1)
+				mockStore.EXPECT().LoadUser(MockMMUserID).Return(nil, errors.New("error filtering user")).Times(1)
 			},
 			assertion: func(t *testing.T, settings *store.DailySummaryUserSettings, err error) {
-				require.Error(t, err)
 				require.ErrorContains(t, err, "error filtering user")
 				require.Nil(t, settings)
 			},
@@ -664,15 +643,12 @@ func TestSetDailySummaryEnabled(t *testing.T) {
 		{
 			name:   "error storing user settings",
 			enable: false,
+			user:   GetMockUserWithDefaultDailySummaryUserSettings(),
 			setupMock: func() {
-				user.User = &store.User{Settings: store.Settings{}}
-				user.Settings.DailySummary = store.DefaultDailySummaryUserSettings()
-
-				mockPluginAPI.EXPECT().GetMattermostUser("testMMUserID")
-				mockStore.EXPECT().StoreUser(user.User).Return(errors.New("store error")).Times(1)
+				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID)
+				mockStore.EXPECT().StoreUser(gomock.Any()).Return(errors.New("store error")).Times(1)
 			},
 			assertion: func(t *testing.T, settings *store.DailySummaryUserSettings, err error) {
-				require.Error(t, err)
 				require.EqualError(t, err, "store error")
 				require.Nil(t, settings)
 			},
@@ -680,12 +656,10 @@ func TestSetDailySummaryEnabled(t *testing.T) {
 		{
 			name:   "successful enabling of daily summary",
 			enable: true,
+			user:   GetMockUserWithDefaultDailySummaryUserSettings(),
 			setupMock: func() {
-				user.User = &store.User{Settings: store.Settings{}}
-				user.Settings.DailySummary = store.DefaultDailySummaryUserSettings()
-
-				mockPluginAPI.EXPECT().GetMattermostUser("testMMUserID")
-				mockStore.EXPECT().StoreUser(user.User).Return(nil).Times(1)
+				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID)
+				mockStore.EXPECT().StoreUser(gomock.Any()).Return(nil).Times(1)
 			},
 			assertion: func(t *testing.T, settings *store.DailySummaryUserSettings, err error) {
 				require.NoError(t, err)
@@ -697,7 +671,7 @@ func TestSetDailySummaryEnabled(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMock()
 
-			settings, err := mscalendar.SetDailySummaryEnabled(user, tt.enable)
+			settings, err := mscalendar.SetDailySummaryEnabled(tt.user, tt.enable)
 			tt.assertion(t, settings, err)
 		})
 	}

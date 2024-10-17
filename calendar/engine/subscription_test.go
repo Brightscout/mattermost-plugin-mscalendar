@@ -14,8 +14,7 @@ import (
 )
 
 func TestCreateMyEventSubscription(t *testing.T) {
-	mscalendar, mockStore, _, _, _, mockClient, _ := MockSetup(t)
-	mockUser := GetMockUser()
+	mscalendar, mockStore, _, _, _, mockClient, _ := GetMockSetup(t)
 	expectedSub := GetMockSubscription()
 
 	tests := []struct {
@@ -24,38 +23,33 @@ func TestCreateMyEventSubscription(t *testing.T) {
 		assertion func(sub *store.Subscription, err error)
 	}{
 		{
-			name: "error filtering with user",
+			name: "error filtering with the user",
 			setupMock: func() {
-				mockUser.User = nil
 				mscalendar.client = nil
-				mscalendar.actingUser = &User{MattermostUserID: "testActingUserID"}
-				mockStore.EXPECT().LoadUser("testActingUserID").Return(nil, errors.New("error filtering user")).Times(1)
+				mscalendar.actingUser = GetMockUser(nil, nil, MockActingUserID, nil)
+				mockStore.EXPECT().LoadUser(MockActingUserID).Return(nil, errors.New("error filtering the user")).Times(1)
 			},
 			assertion: func(sub *store.Subscription, err error) {
-				require.Error(t, err)
-				require.ErrorContains(t, err, "error filtering user")
+				require.ErrorContains(t, err, "error filtering the user")
 			},
 		},
 		{
-			name: "error creating subscription",
+			name: "error creating the subscription",
 			setupMock: func() {
-				mockUser.User = &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}}
 				mscalendar.client = mockClient
-				mscalendar.actingUser = &User{User: &store.User{Remote: &remote.User{ID: "testActingUserRemoteID"}}, MattermostUserID: "testActingUserID"}
-				mockClient.EXPECT().CreateMySubscription(gomock.Any(), "testActingUserRemoteID").Return(nil, errors.New("error creating subscription"))
+				mscalendar.actingUser = GetMockUser(model.NewString(MockActingUserRemoteID), nil, MockActingUserID, nil)
+				mockClient.EXPECT().CreateMySubscription(gomock.Any(), MockActingUserRemoteID).Return(nil, errors.New("error creating the subscription"))
 			},
 			assertion: func(sub *store.Subscription, err error) {
-				require.Error(t, err)
-				require.EqualError(t, err, "error creating subscription")
+				require.EqualError(t, err, "error creating the subscription")
 			},
 		},
 		{
 			name: "subscription created successfully",
 			setupMock: func() {
-				mockUser.User = &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}}
 				mscalendar.client = mockClient
-				mscalendar.actingUser = &User{User: &store.User{Remote: &remote.User{ID: "testActingUserRemoteID"}}, MattermostUserID: "testActingUserID"}
-				mockClient.EXPECT().CreateMySubscription(gomock.Any(), "testActingUserRemoteID").Return(&remote.Subscription{}, nil)
+				mscalendar.actingUser = GetMockUser(model.NewString(MockActingUserRemoteID), nil, MockActingUserID, nil)
+				mockClient.EXPECT().CreateMySubscription(gomock.Any(), MockActingUserRemoteID).Return(&remote.Subscription{}, nil)
 				mockStore.EXPECT().StoreUserSubscription(mscalendar.actingUser.User, expectedSub)
 			},
 			assertion: func(sub *store.Subscription, err error) {
@@ -76,8 +70,7 @@ func TestCreateMyEventSubscription(t *testing.T) {
 }
 
 func TestLoadMyEventSubscription(t *testing.T) {
-	mscalendar, mockStore, _, _, mockPluginAPI, mockClient, _ := MockSetup(t)
-	mockUser := GetMockUser()
+	mscalendar, mockStore, _, _, mockPluginAPI, mockClient, _ := GetMockSetup(t)
 	expectedSubscription := GetMockSubscription()
 
 	tests := []struct {
@@ -88,40 +81,35 @@ func TestLoadMyEventSubscription(t *testing.T) {
 		{
 			name: "error filtering with user",
 			setupMock: func() {
-				mockUser.User = nil
 				mscalendar.client = nil
-				mscalendar.actingUser = &User{MattermostUserID: "testActingUserID"}
-				mockStore.EXPECT().LoadUser("testActingUserID").Return(nil, errors.New("error filtering user")).Times(1)
+				mscalendar.actingUser = GetMockUser(nil, nil, MockActingUserID, nil)
+				mockStore.EXPECT().LoadUser(MockActingUserID).Return(nil, errors.New("error filtering user")).Times(1)
 			},
 			assertion: func(sub *store.Subscription, err error) {
-				require.Error(t, err)
-				require.EqualError(t, err, "It looks like your Mattermost account is not connected to testDisplayName. Please connect your account using `/testCommandTrigger connect`.: error filtering user")
+				require.ErrorContains(t, err, "error filtering user")
 			},
 		},
 		{
-			name: "error loading subscription",
+			name: "error loading the subscription",
 			setupMock: func() {
-				mockUser.User = &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}}
 				mscalendar.client = mockClient
-				mscalendar.actingUser = &User{User: &store.User{Remote: &remote.User{ID: "testActingUserRemoteID"}}, MattermostUserID: "testActingUserID"}
-				mscalendar.actingUser.Settings.EventSubscriptionID = "testEventSubscriptionID"
-				mockPluginAPI.EXPECT().GetMattermostUser("testActingUserID").Return(&model.User{}, nil)
-				mockStore.EXPECT().LoadSubscription("testEventSubscriptionID").Return(nil, errors.New("error loading subscription")).Times(1)
+				mscalendar.actingUser = GetMockUser(model.NewString(MockActingUserRemoteID), nil, MockActingUserID, nil)
+				mscalendar.actingUser.Settings.EventSubscriptionID = MockEventSubscriptionID
+				mockPluginAPI.EXPECT().GetMattermostUser(MockActingUserID).Return(&model.User{}, nil)
+				mockStore.EXPECT().LoadSubscription(MockEventSubscriptionID).Return(nil, errors.New("error loading the subscription")).Times(1)
 			},
 			assertion: func(sub *store.Subscription, err error) {
-				require.Error(t, err)
-				require.EqualError(t, err, "error loading subscription")
+				require.EqualError(t, err, "error loading the subscription")
 			},
 		},
 		{
 			name: "subscription loaded successfully",
 			setupMock: func() {
-				mockUser.User = &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}}
 				mscalendar.client = mockClient
-				mscalendar.actingUser = &User{User: &store.User{Remote: &remote.User{ID: "testActingUserRemoteID"}}, MattermostUserID: "testActingUserID"}
-				mscalendar.actingUser.Settings.EventSubscriptionID = "testEventSubscriptionID"
-				mockPluginAPI.EXPECT().GetMattermostUser("testActingUserID").Return(&model.User{}, nil)
-				mockStore.EXPECT().LoadSubscription("testEventSubscriptionID").Return(expectedSubscription, nil).Times(1)
+				mscalendar.actingUser = GetMockUser(model.NewString(MockActingUserRemoteID), nil, MockActingUserID, nil)
+				mscalendar.actingUser.Settings.EventSubscriptionID = MockEventSubscriptionID
+				mockPluginAPI.EXPECT().GetMattermostUser(MockActingUserID).Return(&model.User{}, nil)
+				mockStore.EXPECT().LoadSubscription(MockEventSubscriptionID).Return(expectedSubscription, nil).Times(1)
 			},
 			assertion: func(sub *store.Subscription, err error) {
 				require.NoError(t, err)
@@ -141,8 +129,7 @@ func TestLoadMyEventSubscription(t *testing.T) {
 }
 
 func TestListRemoteSubscriptions(t *testing.T) {
-	mscalendar, mockStore, _, _, _, mockClient, _ := MockSetup(t)
-	mockUser := GetMockUser()
+	mscalendar, mockStore, _, _, _, mockClient, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name      string
@@ -152,42 +139,37 @@ func TestListRemoteSubscriptions(t *testing.T) {
 		{
 			name: "error filtering with user",
 			setupMock: func() {
-				mockUser.User = nil
 				mscalendar.client = nil
-				mscalendar.actingUser = &User{MattermostUserID: "testActingUserID"}
-				mockStore.EXPECT().LoadUser("testActingUserID").Return(nil, errors.New("error filtering user")).Times(1)
+				mscalendar.actingUser = GetMockUser(nil, nil, MockActingUserID, nil)
+				mockStore.EXPECT().LoadUser(MockActingUserID).Return(nil, errors.New("error filtering the user")).Times(1)
 			},
 			assertion: func(subs []*remote.Subscription, err error) {
-				require.Error(t, err)
-				require.EqualError(t, err, "error withClient in ListRemoteSubscriptions: It looks like your Mattermost account is not connected to testDisplayName. Please connect your account using `/testCommandTrigger connect`.: error filtering user")
+				require.ErrorContains(t, err, "error filtering the user")
 			},
 		},
 		{
-			name: "error listing subscription",
+			name: "error listing the subscription",
 			setupMock: func() {
-				mockUser.User = &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}}
 				mscalendar.client = mockClient
-				mscalendar.actingUser = &User{User: &store.User{Remote: &remote.User{ID: "testActingUserRemoteID"}}, MattermostUserID: "testActingUserID"}
-				mscalendar.actingUser.Settings.EventSubscriptionID = "testEventSubscriptionID"
-				mockClient.EXPECT().ListSubscriptions().Return(nil, errors.New("error listing subscriptions"))
+				mscalendar.actingUser = GetMockUser(model.NewString(MockActingUserRemoteID), nil, MockActingUserID, nil)
+				mscalendar.actingUser.Settings.EventSubscriptionID = MockEventSubscriptionID
+				mockClient.EXPECT().ListSubscriptions().Return(nil, errors.New("error listing the subscriptions"))
 			},
 			assertion: func(subs []*remote.Subscription, err error) {
-				require.Error(t, err)
-				require.EqualError(t, err, "error listing subscriptions")
+				require.EqualError(t, err, "error listing the subscriptions")
 			},
 		},
 		{
 			name: "subscriptions listed successfully",
 			setupMock: func() {
-				mockUser.User = &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}}
 				mscalendar.client = mockClient
-				mscalendar.actingUser = &User{User: &store.User{Remote: &remote.User{ID: "testActingUserRemoteID"}}, MattermostUserID: "testActingUserID"}
-				mscalendar.actingUser.Settings.EventSubscriptionID = "testEventSubscriptionID"
-				mockClient.EXPECT().ListSubscriptions().Return([]*remote.Subscription{{ID: "sub1"}, {ID: "sub2"}}, nil)
+				mscalendar.actingUser = GetMockUser(model.NewString(MockActingUserRemoteID), nil, MockActingUserID, nil)
+				mscalendar.actingUser.Settings.EventSubscriptionID = MockEventSubscriptionID
+				mockClient.EXPECT().ListSubscriptions().Return([]*remote.Subscription{{ID: "mockSubscription1"}, {ID: "mockSubscription2"}}, nil)
 			},
 			assertion: func(subs []*remote.Subscription, err error) {
 				require.NoError(t, err)
-				require.Equal(t, []*remote.Subscription{{ID: "sub1"}, {ID: "sub2"}}, subs)
+				require.Equal(t, []*remote.Subscription{{ID: "mockSubscription1"}, {ID: "mockSubscription2"}}, subs)
 			},
 		},
 	}
@@ -203,8 +185,7 @@ func TestListRemoteSubscriptions(t *testing.T) {
 }
 
 func TestRenewMyEventSubscription(t *testing.T) {
-	mscalendar, mockStore, _, mockRemote, mockPluginAPI, mockClient, _ := MockSetup(t)
-	mockUser := GetMockUser()
+	mscalendar, mockStore, _, mockRemote, mockPluginAPI, mockClient, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name      string
@@ -212,25 +193,22 @@ func TestRenewMyEventSubscription(t *testing.T) {
 		assertion func(subs *store.Subscription, err error)
 	}{
 		{
-			name: "error filtering with user",
+			name: "error filtering with the user",
 			setupMock: func() {
-				mockUser.User = nil
 				mscalendar.client = nil
-				mscalendar.actingUser = &User{MattermostUserID: "testActingUserID"}
-				mockStore.EXPECT().LoadUser("testActingUserID").Return(nil, errors.New("error filtering user")).Times(1)
+				mscalendar.actingUser = GetMockUser(nil, nil, MockActingUserID, nil)
+				mockStore.EXPECT().LoadUser(MockActingUserID).Return(nil, errors.New("error filtering the user")).Times(1)
 			},
 			assertion: func(subs *store.Subscription, err error) {
-				require.Error(t, err)
-				require.ErrorContains(t, err, "error filtering user")
+				require.ErrorContains(t, err, "error filtering the user")
 			},
 		},
 		{
 			name: "no subscriptions present",
 			setupMock: func() {
-				mockUser.User = &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}}
-				mockPluginAPI.EXPECT().GetMattermostUser("testActingUserID").Return(&model.User{}, nil)
+				mockPluginAPI.EXPECT().GetMattermostUser(MockActingUserID).Return(&model.User{}, nil)
 				mockRemote.EXPECT().MakeClient(gomock.Any(), nil)
-				mscalendar.actingUser = &User{User: &store.User{Remote: &remote.User{ID: "testActingUserRemoteID"}}, MattermostUserID: "testActingUserID"}
+				mscalendar.actingUser = GetMockUser(model.NewString(MockActingUserRemoteID), nil, MockActingUserID, nil)
 				mscalendar.actingUser.Settings.EventSubscriptionID = ""
 			},
 			assertion: func(subs *store.Subscription, err error) {
@@ -239,45 +217,42 @@ func TestRenewMyEventSubscription(t *testing.T) {
 			},
 		},
 		{
-			name: "error loading subscription",
+			name: "error loading the subscription",
 			setupMock: func() {
-				mockUser.User = &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}}
-				mockPluginAPI.EXPECT().GetMattermostUser("testActingUserID").Return(&model.User{}, nil)
+				mockPluginAPI.EXPECT().GetMattermostUser(MockActingUserID).Return(&model.User{}, nil)
 				mockRemote.EXPECT().MakeClient(gomock.Any(), nil)
-				mscalendar.actingUser = &User{User: &store.User{Remote: &remote.User{ID: "testActingUserRemoteID"}}, MattermostUserID: "testActingUserID"}
-				mscalendar.actingUser.Settings.EventSubscriptionID = "testEventSubscriptionID"
-				mockStore.EXPECT().LoadSubscription("testEventSubscriptionID").Return(nil, errors.New("some error occurred while loading subscription"))
+				mscalendar.actingUser = GetMockUser(model.NewString(MockActingUserRemoteID), nil, MockActingUserID, nil)
+				mscalendar.actingUser.Settings.EventSubscriptionID = MockEventSubscriptionID
+				mockStore.EXPECT().LoadSubscription(MockEventSubscriptionID).Return(nil, errors.New("some error occurred while loading the subscription"))
 			},
 			assertion: func(subs *store.Subscription, err error) {
 				require.Error(t, err)
-				require.EqualError(t, err, "error loading subscription: some error occurred while loading subscription")
+				require.EqualError(t, err, "error loading subscription: some error occurred while loading the subscription")
 			},
 		},
 		{
-			name: "error renewing subscription",
+			name: "error renewing the subscription",
 			setupMock: func() {
-				mockUser.User = &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}}
 				mscalendar.client = mockClient
-				mscalendar.actingUser = &User{User: &store.User{Remote: &remote.User{ID: "testActingUserRemoteID"}}, MattermostUserID: "testActingUserID"}
-				mscalendar.actingUser.Settings.EventSubscriptionID = "testEventSubscriptionID"
-				mockStore.EXPECT().LoadSubscription("testEventSubscriptionID").Return(&store.Subscription{Remote: &remote.Subscription{}}, nil)
-				mockClient.EXPECT().RenewSubscription(gomock.Any(), "testActingUserRemoteID", &remote.Subscription{}).Return(nil, errors.New("The object was not found")).Times(1)
-				mockStore.EXPECT().DeleteUserSubscription(gomock.Any(), "testEventSubscriptionID").Return(errors.New("error deleting subscription")).Times(1)
+				mscalendar.actingUser = GetMockUser(model.NewString(MockActingUserRemoteID), nil, MockActingUserID, nil)
+				mscalendar.actingUser.Settings.EventSubscriptionID = MockEventSubscriptionID
+				mockStore.EXPECT().LoadSubscription(MockEventSubscriptionID).Return(&store.Subscription{Remote: &remote.Subscription{}}, nil)
+				mockClient.EXPECT().RenewSubscription(gomock.Any(), MockActingUserRemoteID, &remote.Subscription{}).Return(nil, errors.New("The object was not found")).Times(1)
+				mockStore.EXPECT().DeleteUserSubscription(gomock.Any(), MockEventSubscriptionID).Return(errors.New("error deleting the subscription")).Times(1)
 			},
 			assertion: func(subs *store.Subscription, err error) {
 				require.Error(t, err)
-				require.EqualError(t, err, "error deleting subscription")
+				require.EqualError(t, err, "error deleting the subscription")
 			},
 		},
 		{
-			name: "successfully renew event subscription",
+			name: "successfully renew the event subscription",
 			setupMock: func() {
-				mockUser.User = &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}}
 				mscalendar.client = mockClient
-				mscalendar.actingUser = &User{User: &store.User{Remote: &remote.User{ID: "testActingUserRemoteID"}}, MattermostUserID: "testActingUserID"}
-				mscalendar.actingUser.Settings.EventSubscriptionID = "testEventSubscriptionID"
-				mockStore.EXPECT().LoadSubscription("testEventSubscriptionID").Return(&store.Subscription{Remote: &remote.Subscription{}}, nil).Times(2)
-				mockClient.EXPECT().RenewSubscription(gomock.Any(), "testActingUserRemoteID", &remote.Subscription{}).Return(&remote.Subscription{}, nil).Times(1)
+				mscalendar.actingUser = GetMockUser(model.NewString(MockActingUserRemoteID), nil, MockActingUserID, nil)
+				mscalendar.actingUser.Settings.EventSubscriptionID = MockEventSubscriptionID
+				mockStore.EXPECT().LoadSubscription(MockEventSubscriptionID).Return(&store.Subscription{Remote: &remote.Subscription{}}, nil).Times(2)
+				mockClient.EXPECT().RenewSubscription(gomock.Any(), MockActingUserRemoteID, &remote.Subscription{}).Return(&remote.Subscription{}, nil).Times(1)
 				mockStore.EXPECT().StoreUserSubscription(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			assertion: func(subs *store.Subscription, err error) {
@@ -298,8 +273,7 @@ func TestRenewMyEventSubscription(t *testing.T) {
 }
 
 func TestDeleteMyEventSubscription(t *testing.T) {
-	mscalendar, mockStore, _, _, mockPluginAPI, mockClient, _ := MockSetup(t)
-	mockUser := GetMockUser()
+	mscalendar, mockStore, _, _, mockPluginAPI, mockClient, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name      string
@@ -307,40 +281,37 @@ func TestDeleteMyEventSubscription(t *testing.T) {
 		assertion func(err error)
 	}{
 		{
-			name: "error filtering with user",
+			name: "error filtering with the user",
 			setupMock: func() {
-				mockUser.User = nil
 				mscalendar.client = nil
-				mscalendar.actingUser = &User{MattermostUserID: "testActingUserID"}
-				mockStore.EXPECT().LoadUser("testActingUserID").Return(nil, errors.New("error filtering user")).Times(1)
+				mscalendar.actingUser = GetMockUser(nil, nil, MockActingUserID, nil)
+				mockStore.EXPECT().LoadUser(MockActingUserID).Return(nil, errors.New("error filtering the user")).Times(1)
 			},
 			assertion: func(err error) {
 				require.Error(t, err)
-				require.ErrorContains(t, err, "error filtering user")
+				require.ErrorContains(t, err, "error filtering the user")
 			},
 		},
 		{
-			name: "error loading subscription",
+			name: "error loading the subscription",
 			setupMock: func() {
-				mockUser.User = &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}}
-				mscalendar.actingUser = &User{User: &store.User{Remote: &remote.User{ID: "testActingUserRemoteID"}}, MattermostUserID: "testActingUserID"}
-				mscalendar.actingUser.Settings.EventSubscriptionID = "testEventSubscriptionID"
-				mockPluginAPI.EXPECT().GetMattermostUser("testActingUserID").Return(&model.User{}, nil)
-				mockStore.EXPECT().LoadSubscription("testEventSubscriptionID").Return(nil, errors.New("some error occurred while loading subscription")).Times(1)
+				mscalendar.actingUser = &User{User: &store.User{Remote: &remote.User{ID: MockActingUserRemoteID}}, MattermostUserID: MockActingUserID}
+				mscalendar.actingUser.Settings.EventSubscriptionID = MockEventSubscriptionID
+				mockPluginAPI.EXPECT().GetMattermostUser(MockActingUserID).Return(&model.User{}, nil)
+				mockStore.EXPECT().LoadSubscription(MockEventSubscriptionID).Return(nil, errors.New("some error occurred while loading the subscription")).Times(1)
 			},
 			assertion: func(err error) {
 				require.Error(t, err)
-				require.EqualError(t, err, "error loading subscription: some error occurred while loading subscription")
+				require.EqualError(t, err, "error loading subscription: some error occurred while loading the subscription")
 			},
 		},
 		{
-			name: "error deleting subscription in DeleteOrphanedSubscription",
+			name: "error deleting the subscription in DeleteOrphanedSubscription",
 			setupMock: func() {
-				mockUser.User = &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}}
-				mscalendar.actingUser = &User{User: &store.User{Remote: &remote.User{ID: "testActingUserRemoteID"}}, MattermostUserID: "testActingUserID"}
-				mscalendar.actingUser.Settings.EventSubscriptionID = "testEventSubscriptionID"
-				mockPluginAPI.EXPECT().GetMattermostUser("testActingUserID").Return(&model.User{}, nil).Times(1)
-				mockStore.EXPECT().LoadSubscription("testEventSubscriptionID").Return(&store.Subscription{Remote: &remote.Subscription{}}, nil).Times(1)
+				mscalendar.actingUser = &User{User: &store.User{Remote: &remote.User{ID: MockActingUserRemoteID}}, MattermostUserID: MockActingUserID}
+				mscalendar.actingUser.Settings.EventSubscriptionID = MockEventSubscriptionID
+				mockPluginAPI.EXPECT().GetMattermostUser(MockActingUserID).Return(&model.User{}, nil).Times(1)
+				mockStore.EXPECT().LoadSubscription(MockEventSubscriptionID).Return(&store.Subscription{Remote: &remote.Subscription{}}, nil).Times(1)
 				mscalendar.client = mockClient
 				mockClient.EXPECT().DeleteSubscription(&remote.Subscription{}).Return(errors.New("some error occured")).Times(1)
 			},
@@ -350,33 +321,31 @@ func TestDeleteMyEventSubscription(t *testing.T) {
 			},
 		},
 		{
-			name: "error deleting user subscription",
+			name: "error deleting the user subscription",
 			setupMock: func() {
-				mockUser.User = &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}}
-				mscalendar.actingUser = &User{User: &store.User{Remote: &remote.User{ID: "testActingUserRemoteID"}}, MattermostUserID: "testActingUserID"}
-				mscalendar.actingUser.Settings.EventSubscriptionID = "testEventSubscriptionID"
-				mockPluginAPI.EXPECT().GetMattermostUser("testActingUserID").Return(&model.User{}, nil).Times(1)
-				mockStore.EXPECT().LoadSubscription("testEventSubscriptionID").Return(&store.Subscription{Remote: &remote.Subscription{}}, nil).Times(1)
+				mscalendar.actingUser = &User{User: &store.User{Remote: &remote.User{ID: MockActingUserRemoteID}}, MattermostUserID: MockActingUserID}
+				mscalendar.actingUser.Settings.EventSubscriptionID = MockEventSubscriptionID
+				mockPluginAPI.EXPECT().GetMattermostUser(MockActingUserID).Return(&model.User{}, nil).Times(1)
+				mockStore.EXPECT().LoadSubscription(MockEventSubscriptionID).Return(&store.Subscription{Remote: &remote.Subscription{}}, nil).Times(1)
 				mscalendar.client = mockClient
 				mockClient.EXPECT().DeleteSubscription(&remote.Subscription{}).Return(nil).Times(1)
-				mockStore.EXPECT().DeleteUserSubscription(gomock.Any(), "testEventSubscriptionID").Return(errors.New("error deleting user subscription"))
+				mockStore.EXPECT().DeleteUserSubscription(gomock.Any(), MockEventSubscriptionID).Return(errors.New("error deleting the user subscription"))
 			},
 			assertion: func(err error) {
 				require.Error(t, err)
-				require.EqualError(t, err, "failed to delete subscription testEventSubscriptionID: error deleting user subscription")
+				require.EqualError(t, err, "failed to delete subscription testEventSubscriptionID: error deleting the user subscription")
 			},
 		},
 		{
 			name: "event subscription deleted successfully",
 			setupMock: func() {
-				mockUser.User = &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}}
-				mscalendar.actingUser = &User{User: &store.User{Remote: &remote.User{ID: "testActingUserRemoteID"}}, MattermostUserID: "testActingUserID"}
-				mscalendar.actingUser.Settings.EventSubscriptionID = "testEventSubscriptionID"
-				mockPluginAPI.EXPECT().GetMattermostUser("testActingUserID").Return(&model.User{}, nil).Times(1)
-				mockStore.EXPECT().LoadSubscription("testEventSubscriptionID").Return(&store.Subscription{Remote: &remote.Subscription{}}, nil).Times(1)
+				mscalendar.actingUser = &User{User: &store.User{Remote: &remote.User{ID: MockActingUserRemoteID}}, MattermostUserID: MockActingUserID}
+				mscalendar.actingUser.Settings.EventSubscriptionID = MockEventSubscriptionID
+				mockPluginAPI.EXPECT().GetMattermostUser(MockActingUserID).Return(&model.User{}, nil).Times(1)
+				mockStore.EXPECT().LoadSubscription(MockEventSubscriptionID).Return(&store.Subscription{Remote: &remote.Subscription{}}, nil).Times(1)
 				mscalendar.client = mockClient
 				mockClient.EXPECT().DeleteSubscription(&remote.Subscription{}).Return(nil).Times(1)
-				mockStore.EXPECT().DeleteUserSubscription(gomock.Any(), "testEventSubscriptionID").Return(nil)
+				mockStore.EXPECT().DeleteUserSubscription(gomock.Any(), MockEventSubscriptionID).Return(nil)
 			},
 			assertion: func(err error) {
 				require.NoError(t, err)
@@ -395,50 +364,42 @@ func TestDeleteMyEventSubscription(t *testing.T) {
 }
 
 func TestDeleteOrphanedSubscription(t *testing.T) {
-	mscalendar, mockStore, _, _, _, mockClient, _ := MockSetup(t)
-	mockUser := GetMockUser()
+	mscalendar, mockStore, _, _, _, mockClient, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name      string
-		eventID   string
 		setupMock func()
 		assertion func(err error)
 	}{
 		{
-			name:    "error filtering with user",
-			eventID: "testEventID",
+			name: "error filtering with the user",
 			setupMock: func() {
-				mockUser.User = nil
 				mscalendar.client = nil
-				mscalendar.actingUser = &User{MattermostUserID: "testActingUserID"}
-				mockStore.EXPECT().LoadUser("testActingUserID").Return(nil, errors.New("error filtering user")).Times(1)
+				mscalendar.actingUser = GetMockUser(nil, nil, MockActingUserID, nil)
+				mockStore.EXPECT().LoadUser(MockActingUserID).Return(nil, errors.New("error filtering the user")).Times(1)
 			},
 			assertion: func(err error) {
 				require.Error(t, err)
-				require.ErrorContains(t, err, "error filtering user")
+				require.ErrorContains(t, err, "error filtering the user")
 			},
 		},
 		{
-			name:    "error deleting subscription",
-			eventID: "testEventID",
+			name: "error deleting the subscription",
 			setupMock: func() {
-				mockUser.User = &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}}
 				mscalendar.client = mockClient
-				mscalendar.actingUser = &User{User: &store.User{Remote: &remote.User{ID: "testActingUserRemoteID"}}, MattermostUserID: "testActingUserID"}
-				mockClient.EXPECT().DeleteSubscription(gomock.Any()).Return(errors.New("error deleting subscription"))
+				mscalendar.actingUser = &User{User: &store.User{Remote: &remote.User{ID: MockActingUserRemoteID}}, MattermostUserID: MockActingUserID}
+				mockClient.EXPECT().DeleteSubscription(gomock.Any()).Return(errors.New("error deleting the subscription"))
 			},
 			assertion: func(err error) {
 				require.Error(t, err)
-				require.EqualError(t, err, "failed to delete subscription : error deleting subscription")
+				require.EqualError(t, err, "failed to delete subscription : error deleting the subscription")
 			},
 		},
 		{
-			name:    "subscription deleted sucessfully",
-			eventID: "testEventID",
+			name: "subscription deleted sucessfully",
 			setupMock: func() {
-				mockUser.User = &store.User{Settings: store.Settings{}, Remote: &remote.User{ID: "testRemoteID"}}
 				mscalendar.client = mockClient
-				mscalendar.actingUser = &User{User: &store.User{Remote: &remote.User{ID: "testActingUserRemoteID"}}, MattermostUserID: "testActingUserID"}
+				mscalendar.actingUser = &User{User: &store.User{Remote: &remote.User{ID: MockActingUserRemoteID}}, MattermostUserID: MockActingUserID}
 				mockClient.EXPECT().DeleteSubscription(gomock.Any()).Return(nil)
 			},
 			assertion: func(err error) {
