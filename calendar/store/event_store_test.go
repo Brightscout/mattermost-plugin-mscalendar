@@ -14,7 +14,7 @@ import (
 )
 
 func TestLoadUserEvent(t *testing.T) {
-	mockAPI, store, _, _, _ := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name       string
@@ -58,7 +58,7 @@ func TestLoadUserEvent(t *testing.T) {
 }
 
 func TestAddLinkedChannelToEvent(t *testing.T) {
-	mockAPI, store, _, _, _ := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name       string
@@ -101,7 +101,7 @@ func TestAddLinkedChannelToEvent(t *testing.T) {
 }
 
 func TestDeleteLinkedChannelFromEvent(t *testing.T) {
-	mockAPI, store, _, _, _ := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name       string
@@ -164,7 +164,7 @@ func TestDeleteLinkedChannelFromEvent(t *testing.T) {
 }
 
 func TestStoreEventMetadata(t *testing.T) {
-	mockAPI, store, _, _, _ := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name       string
@@ -210,7 +210,7 @@ func TestStoreEventMetadata(t *testing.T) {
 }
 
 func TestLoadEventMetadata(t *testing.T) {
-	mockAPI, store, _, _, _ := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name       string
@@ -263,7 +263,7 @@ func TestLoadEventMetadata(t *testing.T) {
 }
 
 func TestDeleteEventMetadata(t *testing.T) {
-	mockAPI, store, _, _, _ := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name       string
@@ -304,7 +304,7 @@ func TestDeleteEventMetadata(t *testing.T) {
 }
 
 func TestStoreUserEvent(t *testing.T) {
-	mockAPI, store, mockLogger, mockLoggerWith, _ := MockStoreSetup(t)
+	mockAPI, store, mockLogger, mockLoggerWith, _ := GetMockSetup(t)
 	mockEvent := &Event{Remote: &remote.Event{ICalUID: "mockICalUID", ID: "mockEventID"}}
 	mockUserID := "user1"
 
@@ -361,7 +361,7 @@ func TestStoreUserEvent(t *testing.T) {
 }
 
 func TestDeleteUserEvent(t *testing.T) {
-	mockAPI, store, mockLogger, mockLoggerWith, _ := MockStoreSetup(t)
+	mockAPI, store, mockLogger, mockLoggerWith, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name       string

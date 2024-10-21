@@ -13,7 +13,7 @@ import (
 )
 
 func TestLoadSubscription(t *testing.T) {
-	mockAPI, store, _, _, _ := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name       string
@@ -59,7 +59,7 @@ func TestLoadSubscription(t *testing.T) {
 }
 
 func TestStoreUserSubscription(t *testing.T) {
-	mockAPI, store, mockLogger, mockLoggerWith, _ := MockStoreSetup(t)
+	mockAPI, store, mockLogger, mockLoggerWith, _ := GetMockSetup(t)
 	mockUser := &User{MattermostUserID: "user1", Settings: Settings{EventSubscriptionID: "mockEventSubscriptionID"}, Remote: &remote.User{ID: "mockRemoteUserID"}}
 	mockSubscription := &Subscription{Remote: &remote.Subscription{ID: "mockSubscriptionID", CreatorID: "mockCreatorID"}}
 
@@ -126,7 +126,7 @@ func TestStoreUserSubscription(t *testing.T) {
 }
 
 func TestDeleteUserSubscription(t *testing.T) {
-	mockAPI, store, mockLogger, mockLoggerWith, _ := MockStoreSetup(t)
+	mockAPI, store, mockLogger, mockLoggerWith, _ := GetMockSetup(t)
 	mockUser := &User{MattermostUserID: "user1", Settings: Settings{EventSubscriptionID: "mockEventSubscriptionID"}, Remote: &remote.User{ID: "mockRemoteUserID"}}
 
 	tests := []struct {

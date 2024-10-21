@@ -13,7 +13,7 @@ import (
 )
 
 func TestSetSetting(t *testing.T) {
-	mockAPI, store, _, _, mockTracker := MockStoreSetup(t)
+	mockAPI, store, _, _, mockTracker := GetMockSetup(t)
 	mockUser := User{
 		MattermostUserID: "mockMattermostUserID",
 		Remote: &remote.User{
@@ -200,7 +200,7 @@ func TestSetSetting(t *testing.T) {
 }
 
 func TestGetSetting(t *testing.T) {
-	mockAPI, store, _, _, _ := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 	mockUser := User{
 		Settings: Settings{
 			DailySummary: &DailySummaryUserSettings{
@@ -331,7 +331,7 @@ func TestDefaultDailySummaryUserSettings(t *testing.T) {
 }
 
 func TestSetPanelPostID(t *testing.T) {
-	mockAPI, store, _, _, _ := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name       string
@@ -373,7 +373,7 @@ func TestSetPanelPostID(t *testing.T) {
 }
 
 func TestGetPanelPostID(t *testing.T) {
-	mockAPI, store, _, _, _ := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name       string
@@ -416,7 +416,7 @@ func TestGetPanelPostID(t *testing.T) {
 }
 
 func TestDeletePanelPostID(t *testing.T) {
-	mockAPI, store, _, _, _ := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name       string

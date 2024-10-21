@@ -13,7 +13,7 @@ import (
 )
 
 func TestSetProperty(t *testing.T) {
-	mockAPI, store, _, _, mockTracker := MockStoreSetup(t)
+	mockAPI, store, _, _, mockTracker := GetMockSetup(t)
 	mockUser := User{
 		MattermostUserID: "mockMMUserID",
 		Remote:           &remote.User{ID: "mockRemoteUserID"},
@@ -144,7 +144,7 @@ func TestSetProperty(t *testing.T) {
 }
 
 func TestSetPostID(t *testing.T) {
-	mockAPI, store, _, _, _ := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 	mockUser := User{
 		Remote:           &remote.User{ID: "mockRemoteUserID"},
 		MattermostUserID: "mockMMUserID",
@@ -234,7 +234,7 @@ func TestSetPostID(t *testing.T) {
 }
 
 func TestGetPostID(t *testing.T) {
-	mockAPI, store, _, _, _ := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 	mockUser := User{
 		Remote:           &remote.User{ID: "mockRemoteUserID"},
 		MattermostUserID: "mockMMUserID",
@@ -308,7 +308,7 @@ func TestGetPostID(t *testing.T) {
 }
 
 func TestRemovePostID(t *testing.T) {
-	mockAPI, store, _, _, _ := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 	mockUser := User{
 		Remote:           &remote.User{ID: "mockRemoteUserID"},
 		MattermostUserID: "mockMMUserID",
@@ -380,7 +380,7 @@ func TestRemovePostID(t *testing.T) {
 }
 
 func TestGetCurrentStep(t *testing.T) {
-	mockAPI, store, _, _, _ := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 	mockUser := User{
 		Remote:           &remote.User{ID: "mockRemoteUserID"},
 		MattermostUserID: "mockMMUserID",
@@ -436,7 +436,7 @@ func TestGetCurrentStep(t *testing.T) {
 }
 
 func TestSetCurrentStep(t *testing.T) {
-	mockAPI, store, _, _, _ := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 	mockUser := User{
 		Remote:           &remote.User{ID: "mockRemoteUserID"},
 		MattermostUserID: "mockMMUserID",
@@ -506,7 +506,7 @@ func TestSetCurrentStep(t *testing.T) {
 }
 
 func TestDeleteCurrentStep(t *testing.T) {
-	mockAPI, store, _, _, _ := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 	mockUser := User{
 		Remote:           &remote.User{ID: "mockRemoteUserID"},
 		MattermostUserID: "mockMMUserID",
