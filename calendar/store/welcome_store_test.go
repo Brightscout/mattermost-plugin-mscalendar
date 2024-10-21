@@ -12,7 +12,7 @@ import (
 )
 
 func TestLoadUserWelcomePost(t *testing.T) {
-	mockAPI, store := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name       string
@@ -55,7 +55,7 @@ func TestLoadUserWelcomePost(t *testing.T) {
 }
 
 func TestStoreUserWelcomePost(t *testing.T) {
-	mockAPI, store := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name       string
@@ -96,7 +96,7 @@ func TestStoreUserWelcomePost(t *testing.T) {
 }
 
 func TestDeleteUserWelcomePost(t *testing.T) {
-	mockAPI, store := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name       string

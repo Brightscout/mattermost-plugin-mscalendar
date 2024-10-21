@@ -3,20 +3,17 @@ package store
 import (
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/testutil"
-	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/tracker/mock_tracker"
-	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/bot/mock_bot"
 
 	"github.com/mattermost/mattermost/server/public/model"
 )
 
 func TestLoadUser(t *testing.T) {
-	mockAPI, store := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name       string
@@ -60,7 +57,7 @@ func TestLoadUser(t *testing.T) {
 }
 
 func TestLoadMattermostUserID(t *testing.T) {
-	mockAPI, store := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name       string
@@ -104,7 +101,7 @@ func TestLoadMattermostUserID(t *testing.T) {
 }
 
 func TestLoadUserIndex(t *testing.T) {
-	mockAPI, store := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name       string
@@ -149,7 +146,7 @@ func TestLoadUserIndex(t *testing.T) {
 }
 
 func TestLoadUserFromIndex(t *testing.T) {
-	mockAPI, store := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name       string
@@ -205,7 +202,7 @@ func TestLoadUserFromIndex(t *testing.T) {
 }
 
 func TestStoreUser(t *testing.T) {
-	mockAPI, store := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 
 	user := &User{
 		MattermostUserID:      "mockMMUserID",
@@ -266,7 +263,7 @@ func TestStoreUser(t *testing.T) {
 }
 
 func TestDeleteUser(t *testing.T) {
-	mockAPI, store := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name       string
@@ -360,7 +357,7 @@ func TestDeleteUser(t *testing.T) {
 }
 
 func TestStoreUserInIndex(t *testing.T) {
-	mockAPI, store := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name       string
@@ -454,7 +451,7 @@ func TestStoreUserInIndex(t *testing.T) {
 }
 
 func TestDeleteUserFromIndex(t *testing.T) {
-	mockAPI, store := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name       string
@@ -534,7 +531,7 @@ func TestDeleteUserFromIndex(t *testing.T) {
 }
 
 func TestSearchInUserIndex(t *testing.T) {
-	mockAPI, store := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name       string
@@ -636,7 +633,7 @@ func TestSearchInUserIndex(t *testing.T) {
 }
 
 func TestStoreUserActiveEvents(t *testing.T) {
-	mockAPI, store := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name             string
@@ -697,7 +694,7 @@ func TestStoreUserActiveEvents(t *testing.T) {
 }
 
 func TestStoreUserLinkedEvent(t *testing.T) {
-	mockAPI, store := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name             string
@@ -776,7 +773,7 @@ func TestStoreUserLinkedEvent(t *testing.T) {
 }
 
 func TestStoreUserCustomStatusUpdates(t *testing.T) {
-	mockAPI, store := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name             string
@@ -981,15 +978,4 @@ func TestIsConfiguredForCustomStatusUpdates(t *testing.T) {
 			require.Equal(t, tt.expectedResult, result, "Expected %v but got %v", tt.expectedResult, result)
 		})
 	}
-}
-
-func MockStoreSetup(t *testing.T) (*testutil.MockPluginAPI, Store) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	mockLogger := mock_bot.NewMockLogger(ctrl)
-	mockTracker := mock_tracker.NewMockTracker(ctrl)
-	mockAPI := &testutil.MockPluginAPI{}
-	store := NewPluginStore(mockAPI, mockLogger, mockTracker, false, nil)
-
-	return mockAPI, store
 }
