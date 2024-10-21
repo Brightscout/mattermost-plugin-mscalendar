@@ -7,68 +7,21 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/mattermost/mattermost/server/public/model"
-	"github.com/mattermost/mattermost/server/public/plugin"
+
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/testutil"
 )
 
-type MockPluginAPI struct {
-	plugin.API
-	mock.Mock
-}
-
-func (m *MockPluginAPI) KVGet(key string) ([]byte, *model.AppError) {
-	args := m.Called(key)
-	data, _ := args.Get(0).([]byte)
-	if err := args.Get(1); err != nil {
-		return nil, err.(*model.AppError)
-	}
-	return data, nil
-}
-
-func (m *MockPluginAPI) KVSet(key string, data []byte) *model.AppError {
-	args := m.Called(key, data)
-	if err := args.Get(0); err != nil {
-		return err.(*model.AppError)
-	}
-	return nil
-}
-
-func (m *MockPluginAPI) KVDelete(key string) *model.AppError {
-	args := m.Called(key)
-	if err := args.Get(0); err != nil {
-		return err.(*model.AppError)
-	}
-	return nil
-}
-
-func (m *MockPluginAPI) KVSetWithOptions(key string, value []byte, options model.PluginKVSetOptions) (bool, *model.AppError) {
-	args := m.Called(key, value, options)
-
-	success := args.Bool(0)
-	if err := args.Get(1); err != nil {
-		return success, err.(*model.AppError)
-	}
-	return success, nil
-}
-
-func (m *MockPluginAPI) KVSetWithExpiry(key string, data []byte, ttlSeconds int64) *model.AppError {
-	args := m.Called(key, data, ttlSeconds)
-	if err := args.Get(0); err != nil {
-		return err.(*model.AppError)
-	}
-	return nil
-}
-
 func TestLoadUserWelcomePost(t *testing.T) {
-	mockAPI, store, _, _, _ := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name       string
-		setup      func(*MockPluginAPI)
+		setup      func(*testutil.MockPluginAPI)
 		assertions func(*testing.T, string, error)
 	}{
 		{
 			name: "Error loading user welcome post",
-			setup: func(mockAPI *MockPluginAPI) {
+			setup: func(mockAPI *testutil.MockPluginAPI) {
 				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return(nil, &model.AppError{Message: "KVGet failed"})
 			},
 			assertions: func(t *testing.T, resp string, err error) {
@@ -78,8 +31,7 @@ func TestLoadUserWelcomePost(t *testing.T) {
 		},
 		{
 			name: "Success loading user welcome post",
-			setup: func(mockAPI *MockPluginAPI) {
-				mockAPI.ExpectedCalls = nil
+			setup: func(mockAPI *testutil.MockPluginAPI) {
 				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(`"mockPostID"`), nil)
 			},
 			assertions: func(t *testing.T, resp string, err error) {
@@ -90,6 +42,7 @@ func TestLoadUserWelcomePost(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			mockAPI.ExpectedCalls = nil
 			tt.setup(mockAPI)
 
 			resp, err := store.LoadUserWelcomePost("mockMMUserID")
@@ -102,16 +55,16 @@ func TestLoadUserWelcomePost(t *testing.T) {
 }
 
 func TestStoreUserWelcomePost(t *testing.T) {
-	mockAPI, store, _, _, _ := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name       string
-		setup      func(*MockPluginAPI)
+		setup      func(*testutil.MockPluginAPI)
 		assertions func(*testing.T, error)
 	}{
 		{
 			name: "Error storing user welcome post",
-			setup: func(mockAPI *MockPluginAPI) {
+			setup: func(mockAPI *testutil.MockPluginAPI) {
 				mockAPI.On("KVSet", mock.Anything, mock.Anything).Return(&model.AppError{Message: "KVSet failed"})
 			},
 			assertions: func(t *testing.T, err error) {
@@ -120,8 +73,7 @@ func TestStoreUserWelcomePost(t *testing.T) {
 		},
 		{
 			name: "Success storing user welcome post",
-			setup: func(mockAPI *MockPluginAPI) {
-				mockAPI.ExpectedCalls = nil
+			setup: func(mockAPI *testutil.MockPluginAPI) {
 				mockAPI.On("KVSet", mock.Anything, mock.Anything).Return(nil)
 			},
 			assertions: func(t *testing.T, err error) {
@@ -131,6 +83,7 @@ func TestStoreUserWelcomePost(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			mockAPI.ExpectedCalls = nil
 			tt.setup(mockAPI)
 
 			err := store.StoreUserWelcomePost("mockMMUserID", "mockPostID")
@@ -143,16 +96,16 @@ func TestStoreUserWelcomePost(t *testing.T) {
 }
 
 func TestDeleteUserWelcomePost(t *testing.T) {
-	mockAPI, store, _, _, _ := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name       string
-		setup      func(*MockPluginAPI)
+		setup      func(*testutil.MockPluginAPI)
 		assertions func(*testing.T, string, error)
 	}{
 		{
 			name: "Error deleting user welcome post",
-			setup: func(mockAPI *MockPluginAPI) {
+			setup: func(mockAPI *testutil.MockPluginAPI) {
 				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(`"mockPostID"`), nil)
 				mockAPI.On("KVDelete", mock.Anything, mock.Anything).Return(&model.AppError{Message: "KVDelete failed"})
 			},
@@ -163,8 +116,7 @@ func TestDeleteUserWelcomePost(t *testing.T) {
 		},
 		{
 			name: "Success deleting user welcome post",
-			setup: func(mockAPI *MockPluginAPI) {
-				mockAPI.ExpectedCalls = nil
+			setup: func(mockAPI *testutil.MockPluginAPI) {
 				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(`"mockPostID"`), nil)
 				mockAPI.On("KVDelete", mock.Anything, mock.Anything).Return(nil)
 			},
@@ -176,6 +128,7 @@ func TestDeleteUserWelcomePost(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			mockAPI.ExpectedCalls = nil
 			tt.setup(mockAPI)
 
 			resp, err := store.DeleteUserWelcomePost("mockMMUserID")

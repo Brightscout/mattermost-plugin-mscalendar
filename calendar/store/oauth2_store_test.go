@@ -10,7 +10,7 @@ import (
 )
 
 func TestVerifyOAuth2State(t *testing.T) {
-	mockAPI, store, _, _, _ := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name       string
@@ -63,7 +63,7 @@ func TestVerifyOAuth2State(t *testing.T) {
 }
 
 func TestStoreOAuth2State(t *testing.T) {
-	mockAPI, store, _, _, _ := MockStoreSetup(t)
+	mockAPI, store, _, _, _ := GetMockSetup(t)
 
 	tests := []struct {
 		name       string
