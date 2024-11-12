@@ -1,6 +1,8 @@
 package store
 
 import (
+	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -12,12 +14,17 @@ import (
 )
 
 const (
-	MockEventSubscriptionID = "mockEventSubscriptionID"
-	MockSubscriptionID      = "mockSubscriptionID"
-	MockRemoteUserID        = "mockRemoteUserID"
-	MockRemoteID            = "mockRemoteID"
-	MockCreatorID           = "mockCreatorID"
-	MockMMUserID            = "mockMMUserID"
+	MockEventSubscriptionID      = "mockEventSubscriptionID"
+	MockSubscriptionID           = "mockSubscriptionID"
+	MockRemoteUserID             = "mockRemoteUserID"
+	MockRemoteID                 = "mockRemoteID"
+	MockCreatorID                = "mockCreatorID"
+	MockMMUserID                 = "mockMMUserID"
+	MockUserIndexJSON            = `[{"mm_id": "mockMMUserID"}]`
+	InvalidMockUserIndexJSON     = `[{"mm_id": "invalidMockMMUserID"}]`
+	MockRemoteJSON               = `{"remote": {"id": "mockRemoteID"}}`
+	MockUserJSON                 = `[{"MattermostUserID":"mockMMUserID","RemoteID":"mockRemoteID"}]`
+	MockUserDetailsWithEventJSON = `{"mm_id":"mockUserID","active_events": []}`
 )
 
 func GetMockSetup(t *testing.T) (*testutil.MockPluginAPI, Store, *mock_bot.MockLogger, *mock_bot.MockLogger, *mock_tracker.MockTracker) {
@@ -51,4 +58,27 @@ func GetMockSubscription() *Subscription {
 			CreatorID: MockCreatorID,
 		},
 	}
+}
+
+func GetRemoteUserJSON(noOfUsers int) string {
+	type RemoteUser struct {
+		MMUsername string `json:"mm_username"`
+		RemoteID   string `json:"remote_id"`
+		MMID       string `json:"mm_id"`
+		Email      string `json:"email"`
+	}
+
+	var users []RemoteUser
+	for i := 1; i <= noOfUsers; i++ {
+		user := RemoteUser{
+			MMUsername: fmt.Sprintf("user%d", i),
+			RemoteID:   fmt.Sprintf("remote%d", i),
+			MMID:       fmt.Sprintf("user%d", i),
+			Email:      fmt.Sprintf("user%d@example.com", i),
+		}
+		users = append(users, user)
+	}
+
+	result, _ := json.Marshal(users)
+	return string(result)
 }
