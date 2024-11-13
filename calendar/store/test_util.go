@@ -1,13 +1,30 @@
 package store
 
 import (
+	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/testutil"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/tracker/mock_tracker"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/bot/mock_bot"
+)
+
+const (
+	MockEventSubscriptionID      = "mockEventSubscriptionID"
+	MockSubscriptionID           = "mockSubscriptionID"
+	MockRemoteUserID             = "mockRemoteUserID"
+	MockRemoteID                 = "mockRemoteID"
+	MockCreatorID                = "mockCreatorID"
+	MockMMUserID                 = "mockMMUserID"
+	MockUserIndexJSON            = `[{"mm_id": "mockMMUserID"}]`
+	InvalidMockUserIndexJSON     = `[{"mm_id": "invalidMockMMUserID"}]`
+	MockRemoteJSON               = `{"remote": {"id": "mockRemoteID"}}`
+	MockUserJSON                 = `[{"MattermostUserID":"mockMMUserID","RemoteID":"mockRemoteID"}]`
+	MockUserDetailsWithEventJSON = `{"mm_id":"mockUserID","active_events": []}`
 )
 
 func GetMockSetup(t *testing.T) (*testutil.MockPluginAPI, Store, *mock_bot.MockLogger, *mock_bot.MockLogger, *mock_tracker.MockTracker) {
@@ -20,4 +37,48 @@ func GetMockSetup(t *testing.T) (*testutil.MockPluginAPI, Store, *mock_bot.MockL
 	store := NewPluginStore(mockAPI, mockLogger, mockTracker, false, nil)
 
 	return mockAPI, store, mockLogger, mockLoggerWith, mockTracker
+}
+
+func GetMockUser() *User {
+	return &User{
+		MattermostUserID: MockMMUserID,
+		Settings: Settings{
+			EventSubscriptionID: MockEventSubscriptionID,
+		},
+		Remote: &remote.User{
+			ID: MockRemoteUserID,
+		},
+	}
+}
+
+func GetMockSubscription() *Subscription {
+	return &Subscription{
+		Remote: &remote.Subscription{
+			ID:        MockSubscriptionID,
+			CreatorID: MockCreatorID,
+		},
+	}
+}
+
+func GetRemoteUserJSON(noOfUsers int) string {
+	type RemoteUser struct {
+		MMUsername string `json:"mm_username"`
+		RemoteID   string `json:"remote_id"`
+		MMID       string `json:"mm_id"`
+		Email      string `json:"email"`
+	}
+
+	var users []RemoteUser
+	for i := 1; i <= noOfUsers; i++ {
+		user := RemoteUser{
+			MMUsername: fmt.Sprintf("user%d", i),
+			RemoteID:   fmt.Sprintf("remote%d", i),
+			MMID:       fmt.Sprintf("user%d", i),
+			Email:      fmt.Sprintf("user%d@example.com", i),
+		}
+		users = append(users, user)
+	}
+
+	result, _ := json.Marshal(users)
+	return string(result)
 }
