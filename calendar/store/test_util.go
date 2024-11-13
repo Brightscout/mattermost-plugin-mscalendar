@@ -7,13 +7,21 @@ import (
 
 	"github.com/golang/mock/gomock"
 
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/testutil"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/tracker/mock_tracker"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/bot/mock_bot"
 )
 
 const (
+	MockMMUsername               = "mockMMUsername"
+	MockMMDisplayName            = "mockMMDisplayName"
 	MockMMUserID                 = "mockMMUserID"
+	MockRemoteID                 = "mockRemoteID"
+	MockRemoteUserID             = "mockRemoteUserID"
+	MockRemoteMail               = "mock@remote.com"
+	MockEventID                  = "mockEventID"
+	MockChannelID                = "mockChannelID"
 	MockUserIndexJSON            = `[{"mm_id": "mockMMUserID"}]`
 	InvalidMockUserIndexJSON     = `[{"mm_id": "invalidMockMMUserID"}]`
 	MockRemoteJSON               = `{"remote": {"id": "mockRemoteID"}}`
@@ -54,4 +62,16 @@ func GetRemoteUserJSON(noOfUsers int) string {
 
 	result, _ := json.Marshal(users)
 	return string(result)
+}
+
+func GetMockUser() *User {
+	return &User{
+		MattermostUserID:      MockMMUserID,
+		MattermostUsername:    MockMMUsername,
+		MattermostDisplayName: MockMMDisplayName,
+		Remote: &remote.User{
+			ID:   MockRemoteID,
+			Mail: MockRemoteMail,
+		},
+	}
 }
