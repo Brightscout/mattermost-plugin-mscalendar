@@ -6,15 +6,12 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/testutil"
 
 	"github.com/mattermost/mattermost/server/public/model"
 )
 
 func TestLoadUser(t *testing.T) {
-	mockAPI, store, _, _, _ := GetMockSetup(t)
-
 	tests := []struct {
 		name       string
 		setup      func(*testutil.MockPluginAPI)
@@ -23,7 +20,7 @@ func TestLoadUser(t *testing.T) {
 		{
 			name: "Error loading user",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return(nil, &model.AppError{Message: "KVGet failed"})
+				mockAPI.On("KVGet", "user_c3b5020d58a049787bc969768465b890").Return(nil, &model.AppError{Message: "KVGet failed"})
 			},
 			assertions: func(t *testing.T, user *User, err error) {
 				require.Nil(t, user)
@@ -33,7 +30,7 @@ func TestLoadUser(t *testing.T) {
 		{
 			name: "Success loading user",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(`{"isCustomStatusSet": false}`), nil)
+				mockAPI.On("KVGet", "user_c3b5020d58a049787bc969768465b890").Return([]byte(`{"isCustomStatusSet": false}`), nil)
 			},
 			assertions: func(t *testing.T, user *User, err error) {
 				require.NoError(t, err)
@@ -44,21 +41,18 @@ func TestLoadUser(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockAPI.ExpectedCalls = nil
+			mockAPI, store, _, _, _ := GetMockSetup(t)
 			tt.setup(mockAPI)
 
 			user, err := store.LoadUser(MockMMUserID)
 
 			tt.assertions(t, user, err)
-
 			mockAPI.AssertExpectations(t)
 		})
 	}
 }
 
 func TestLoadMattermostUserID(t *testing.T) {
-	mockAPI, store, _, _, _ := GetMockSetup(t)
-
 	tests := []struct {
 		name       string
 		setup      func(*testutil.MockPluginAPI)
@@ -67,7 +61,7 @@ func TestLoadMattermostUserID(t *testing.T) {
 		{
 			name: "Error loading Mattermost User ID",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return(nil, &model.AppError{Message: "Load failed"})
+				mockAPI.On("KVGet", "mmuid_0404eb7ac36366cbc447d63a3acd7a5d").Return(nil, &model.AppError{Message: "Load failed"})
 			},
 			assertions: func(t *testing.T, userID string, err error) {
 				require.Empty(t, userID)
@@ -77,32 +71,28 @@ func TestLoadMattermostUserID(t *testing.T) {
 		{
 			name: "Success loading Mattermost User ID",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockUserID := []byte("mockMattermostUserID")
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return(mockUserID, nil)
+				mockAPI.On("KVGet", "mmuid_0404eb7ac36366cbc447d63a3acd7a5d").Return([]byte(MockMMUserID), nil)
 			},
 			assertions: func(t *testing.T, userID string, err error) {
 				require.NoError(t, err)
-				require.Equal(t, "mockMattermostUserID", userID)
+				require.Equal(t, MockMMUserID, userID)
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockAPI.ExpectedCalls = nil
+			mockAPI, store, _, _, _ := GetMockSetup(t)
 			tt.setup(mockAPI)
 
-			userID, err := store.LoadMattermostUserID("mockRemoteUserID")
+			userID, err := store.LoadMattermostUserID(MockRemoteUserID)
 
 			tt.assertions(t, userID, err)
-
 			mockAPI.AssertExpectations(t)
 		})
 	}
 }
 
 func TestLoadUserIndex(t *testing.T) {
-	mockAPI, store, _, _, _ := GetMockSetup(t)
-
 	tests := []struct {
 		name       string
 		setup      func(*testutil.MockPluginAPI)
@@ -121,33 +111,29 @@ func TestLoadUserIndex(t *testing.T) {
 		{
 			name: "Success loading UserIndex",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockUserIndexJSON := `[{"mm_username": "mockUser"}]`
-				mockAPI.On("KVGet", "userindex_").Return([]byte(mockUserIndexJSON), nil)
+				mockAPI.On("KVGet", "userindex_").Return([]byte(`[{"mm_username": "mockMMUsername"}]`), nil)
 			},
 			assertions: func(t *testing.T, userIndex UserIndex, err error) {
 				require.NoError(t, err)
 				require.Len(t, userIndex, 1)
-				require.Equal(t, "mockUser", userIndex[0].MattermostUsername)
+				require.Equal(t, MockMMUsername, userIndex[0].MattermostUsername)
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockAPI.ExpectedCalls = nil
+			mockAPI, store, _, _, _ := GetMockSetup(t)
 			tt.setup(mockAPI)
 
 			userIndex, err := store.LoadUserIndex()
 
 			tt.assertions(t, userIndex, err)
-
 			mockAPI.AssertExpectations(t)
 		})
 	}
 }
 
 func TestLoadUserFromIndex(t *testing.T) {
-	mockAPI, store, _, _, _ := GetMockSetup(t)
-
 	tests := []struct {
 		name       string
 		setup      func(*testutil.MockPluginAPI)
@@ -156,7 +142,7 @@ func TestLoadUserFromIndex(t *testing.T) {
 		{
 			name: "Error loading UserIndex",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return(nil, &model.AppError{Message: "Load failed"})
+				mockAPI.On("KVGet", "userindex_").Return(nil, &model.AppError{Message: "Load failed"})
 			},
 			assertions: func(t *testing.T, user *UserShort, err error) {
 				require.Nil(t, user)
@@ -166,7 +152,7 @@ func TestLoadUserFromIndex(t *testing.T) {
 		{
 			name: "User not found in index",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(InvalidMockUserIndexJSON), nil)
+				mockAPI.On("KVGet", "userindex_").Return([]byte(InvalidMockUserIndexJSON), nil)
 			},
 			assertions: func(t *testing.T, user *UserShort, err error) {
 				require.Nil(t, user)
@@ -176,7 +162,7 @@ func TestLoadUserFromIndex(t *testing.T) {
 		{
 			name: "Success loading User from index",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(MockUserIndexJSON), nil)
+				mockAPI.On("KVGet", "userindex_").Return([]byte(MockUserIndexJSON), nil)
 			},
 			assertions: func(t *testing.T, user *UserShort, err error) {
 				require.NoError(t, err)
@@ -186,27 +172,19 @@ func TestLoadUserFromIndex(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockAPI.ExpectedCalls = nil
+			mockAPI, store, _, _, _ := GetMockSetup(t)
 			tt.setup(mockAPI)
 
 			user, err := store.LoadUserFromIndex(MockMMUserID)
 
 			tt.assertions(t, user, err)
-
 			mockAPI.AssertExpectations(t)
 		})
 	}
 }
 
 func TestStoreUser(t *testing.T) {
-	mockAPI, store, _, _, _ := GetMockSetup(t)
-
-	user := &User{
-		MattermostUserID:      MockMMUserID,
-		Remote:                &remote.User{ID: "mockRemoteID"},
-		MattermostUsername:    "mockUser",
-		MattermostDisplayName: "Mock User",
-	}
+	user := GetMockUser()
 
 	tests := []struct {
 		name       string
@@ -216,7 +194,7 @@ func TestStoreUser(t *testing.T) {
 		{
 			name: "Error storing user JSON",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVSet", mock.AnythingOfType("string"), mock.Anything).Return(&model.AppError{Message: "Failed to store user"})
+				mockAPI.On("KVSet", "user_c3b5020d58a049787bc969768465b890", mock.Anything).Return(&model.AppError{Message: "Failed to store user"})
 			},
 			assertions: func(t *testing.T, err error) {
 				require.ErrorContains(t, err, "failed plugin KVSet", "Failed to store user")
@@ -225,9 +203,9 @@ func TestStoreUser(t *testing.T) {
 		{
 			name: "Error storing Mattermost User ID",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVSet", mock.AnythingOfType("string"), mock.Anything).Return(nil).Times(1)
-				mockAPI.On("KVSet", mock.AnythingOfType("string"), []byte(MockMMUserID)).Return(&model.AppError{Message: "Failed to store Mattermost User ID"}).Times(1)
-				mockAPI.On("KVDelete", mock.AnythingOfType("string")).Return(nil)
+				mockAPI.On("KVSet", "user_c3b5020d58a049787bc969768465b890", mock.Anything).Return(nil).Times(1)
+				mockAPI.On("KVSet", "mmuid_e138a0f218087f9324d8c77f87d5f3a0", []byte(MockMMUserID)).Return(&model.AppError{Message: "Failed to store Mattermost User ID"}).Times(1)
+				mockAPI.On("KVDelete", "user_c3b5020d58a049787bc969768465b890").Return(nil)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.ErrorContains(t, err, "failed plugin KVSet", "Failed to store user")
@@ -236,8 +214,8 @@ func TestStoreUser(t *testing.T) {
 		{
 			name: "Success storing user",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVSet", mock.AnythingOfType("string"), mock.Anything).Return(nil)
-				mockAPI.On("KVSet", mock.AnythingOfType("string"), []byte(MockMMUserID)).Return(nil)
+				mockAPI.On("KVSet", "user_c3b5020d58a049787bc969768465b890", mock.Anything).Return(nil)
+				mockAPI.On("KVSet", "mmuid_e138a0f218087f9324d8c77f87d5f3a0", []byte(MockMMUserID)).Return(nil)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.NoError(t, err)
@@ -246,21 +224,18 @@ func TestStoreUser(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockAPI.ExpectedCalls = nil
+			mockAPI, store, _, _, _ := GetMockSetup(t)
 			tt.setup(mockAPI)
 
 			err := store.StoreUser(user)
 
 			tt.assertions(t, err)
-
 			mockAPI.AssertExpectations(t)
 		})
 	}
 }
 
 func TestDeleteUser(t *testing.T) {
-	mockAPI, store, _, _, _ := GetMockSetup(t)
-
 	tests := []struct {
 		name       string
 		setup      func(*testutil.MockPluginAPI)
@@ -269,7 +244,7 @@ func TestDeleteUser(t *testing.T) {
 		{
 			name: "Error loading user",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return(nil, &model.AppError{Message: "KVGet failed"})
+				mockAPI.On("KVGet", "user_c3b5020d58a049787bc969768465b890").Return(nil, &model.AppError{Message: "KVGet failed"})
 			},
 			assertions: func(t *testing.T, err error) {
 				require.EqualError(t, err, "failed plugin KVGet: KVGet failed")
@@ -278,8 +253,8 @@ func TestDeleteUser(t *testing.T) {
 		{
 			name: "Error deleting user",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(`{}`), nil)
-				mockAPI.On("KVDelete", mock.AnythingOfType("string")).Return(&model.AppError{Message: "error deleting user"})
+				mockAPI.On("KVGet", "user_c3b5020d58a049787bc969768465b890").Return([]byte(`{}`), nil)
+				mockAPI.On("KVDelete", "user_c3b5020d58a049787bc969768465b890").Return(&model.AppError{Message: "error deleting user"})
 			},
 			assertions: func(t *testing.T, err error) {
 				require.ErrorContains(t, err, "error deleting user")
@@ -288,9 +263,9 @@ func TestDeleteUser(t *testing.T) {
 		{
 			name: "Error deleting mattermost user",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(MockRemoteJSON), nil)
-				mockAPI.On("KVDelete", mock.AnythingOfType("string")).Return(nil).Times(1)
-				mockAPI.On("KVDelete", mock.AnythingOfType("string")).Return(&model.AppError{Message: "error deleting mattermost user"})
+				mockAPI.On("KVGet", "user_c3b5020d58a049787bc969768465b890").Return([]byte(MockRemoteJSON), nil)
+				mockAPI.On("KVDelete", "user_c3b5020d58a049787bc969768465b890").Return(nil).Times(1)
+				mockAPI.On("KVDelete", "mmuid_e138a0f218087f9324d8c77f87d5f3a0").Return(&model.AppError{Message: "error deleting mattermost user"})
 			},
 			assertions: func(t *testing.T, err error) {
 				require.ErrorContains(t, err, "error deleting mattermost user")
@@ -299,10 +274,10 @@ func TestDeleteUser(t *testing.T) {
 		{
 			name: "Error getting user details",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(MockRemoteJSON), nil).Times(1)
-				mockAPI.On("KVDelete", mock.AnythingOfType("string")).Return(nil).Times(1)
-				mockAPI.On("KVDelete", mock.AnythingOfType("string")).Return(nil).Times(1)
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return(nil, &model.AppError{Message: "error getting user details"})
+				mockAPI.On("KVGet", "user_c3b5020d58a049787bc969768465b890").Return([]byte(MockRemoteJSON), nil).Times(1)
+				mockAPI.On("KVDelete", "user_c3b5020d58a049787bc969768465b890").Return(nil).Times(1)
+				mockAPI.On("KVDelete", "mmuid_e138a0f218087f9324d8c77f87d5f3a0").Return(nil).Times(1)
+				mockAPI.On("KVGet", "userindex_").Return(nil, &model.AppError{Message: "error getting user details"})
 			},
 			assertions: func(t *testing.T, err error) {
 				require.ErrorContains(t, err, "error getting user details")
@@ -311,11 +286,11 @@ func TestDeleteUser(t *testing.T) {
 		{
 			name: "error storing user",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(MockRemoteJSON), nil).Times(1)
-				mockAPI.On("KVDelete", mock.AnythingOfType("string")).Return(nil).Times(1)
-				mockAPI.On("KVDelete", mock.AnythingOfType("string")).Return(nil).Times(1)
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(`[]`), nil).Times(1)
-				mockAPI.On("KVSet", mock.Anything, mock.Anything).Return(&model.AppError{Message: "error storing user"})
+				mockAPI.On("KVGet", "user_c3b5020d58a049787bc969768465b890").Return([]byte(MockRemoteJSON), nil).Times(1)
+				mockAPI.On("KVDelete", "user_c3b5020d58a049787bc969768465b890").Return(nil).Times(1)
+				mockAPI.On("KVDelete", "mmuid_e138a0f218087f9324d8c77f87d5f3a0").Return(nil).Times(1)
+				mockAPI.On("KVGet", "userindex_").Return([]byte(`[]`), nil).Times(1)
+				mockAPI.On("KVSet", "userindex_", mock.Anything).Return(&model.AppError{Message: "error storing user"})
 			},
 			assertions: func(t *testing.T, err error) {
 				require.ErrorContains(t, err, "error storing user")
@@ -324,10 +299,11 @@ func TestDeleteUser(t *testing.T) {
 		{
 			name: "Success deleting user",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(MockRemoteJSON), nil).Times(1)
-				mockAPI.On("KVDelete", mock.AnythingOfType("string")).Return(nil).Times(2)
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(`[]`), nil).Times(1)
-				mockAPI.On("KVSet", mock.Anything, mock.Anything).Return(nil)
+				mockAPI.On("KVGet", "user_c3b5020d58a049787bc969768465b890").Return([]byte(MockRemoteJSON), nil).Times(1)
+				mockAPI.On("KVDelete", "user_c3b5020d58a049787bc969768465b890").Return(nil).Times(1)
+				mockAPI.On("KVDelete", "mmuid_e138a0f218087f9324d8c77f87d5f3a0").Return(nil).Times(1)
+				mockAPI.On("KVGet", "userindex_").Return([]byte(`[]`), nil).Times(1)
+				mockAPI.On("KVSet", "userindex_", mock.Anything).Return(nil)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.NoError(t, err)
@@ -336,21 +312,18 @@ func TestDeleteUser(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockAPI.ExpectedCalls = nil
+			mockAPI, store, _, _, _ := GetMockSetup(t)
 			tt.setup(mockAPI)
 
 			err := store.DeleteUser(MockMMUserID)
 
 			tt.assertions(t, err)
-
 			mockAPI.AssertExpectations(t)
 		})
 	}
 }
 
 func TestStoreUserInIndex(t *testing.T) {
-	mockAPI, store, _, _, _ := GetMockSetup(t)
-
 	tests := []struct {
 		name       string
 		setup      func(*testutil.MockPluginAPI)
@@ -359,7 +332,7 @@ func TestStoreUserInIndex(t *testing.T) {
 		{
 			name: "Error loading user index",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return(nil, &model.AppError{Message: "KVGet failed"}).Times(1)
+				mockAPI.On("KVGet", "userindex_").Return(nil, &model.AppError{Message: "KVGet failed"}).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.EqualError(t, err, "modification error: failed plugin KVGet: KVGet failed")
@@ -368,7 +341,7 @@ func TestStoreUserInIndex(t *testing.T) {
 		{
 			name: "Error unmarshalling existing user index",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(`invalid json`), nil).Times(1)
+				mockAPI.On("KVGet", "userindex_").Return([]byte(`invalid json`), nil).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.EqualError(t, err, "modification error: invalid character 'i' looking for beginning of value")
@@ -377,8 +350,8 @@ func TestStoreUserInIndex(t *testing.T) {
 		{
 			name: "Error storing updated user index",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(`[]`), nil).Times(1)
-				mockAPI.On("KVSetWithOptions", mock.AnythingOfType("string"), mock.Anything, mock.Anything).Return(false, &model.AppError{Message: "KVSet failed"}).Times(1)
+				mockAPI.On("KVGet", "userindex_").Return([]byte(`[]`), nil).Times(1)
+				mockAPI.On("KVSetWithOptions", "userindex_", mock.Anything, mock.Anything).Return(false, &model.AppError{Message: "KVSet failed"}).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.ErrorContains(t, err, "problem writing value", "KVSet failed")
@@ -387,8 +360,8 @@ func TestStoreUserInIndex(t *testing.T) {
 		{
 			name: "Successfully update an existing user in index with matching IDs",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(MockUserJSON), nil).Times(1)
-				mockAPI.On("KVSetWithOptions", mock.AnythingOfType("string"), mock.Anything, mock.Anything).Return(true, nil).Times(1)
+				mockAPI.On("KVGet", "userindex_").Return([]byte(MockUserJSON), nil).Times(1)
+				mockAPI.On("KVSetWithOptions", "userindex_", mock.Anything, mock.Anything).Return(true, nil).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.NoError(t, err)
@@ -397,8 +370,8 @@ func TestStoreUserInIndex(t *testing.T) {
 		{
 			name: "Successfully store a new user in index",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(`[]`), nil).Times(1)
-				mockAPI.On("KVSetWithOptions", mock.AnythingOfType("string"), mock.Anything, mock.Anything).Return(true, nil).Times(1)
+				mockAPI.On("KVGet", "userindex_").Return([]byte(`[]`), nil).Times(1)
+				mockAPI.On("KVSetWithOptions", "userindex_", mock.Anything, mock.Anything).Return(true, nil).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.NoError(t, err)
@@ -407,8 +380,8 @@ func TestStoreUserInIndex(t *testing.T) {
 		{
 			name: "Successfully update an existing user in index",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(MockUserJSON), nil).Times(1)
-				mockAPI.On("KVSetWithOptions", mock.AnythingOfType("string"), mock.Anything, mock.Anything).Return(true, nil).Times(1)
+				mockAPI.On("KVGet", "userindex_").Return([]byte(MockUserJSON), nil).Times(1)
+				mockAPI.On("KVSetWithOptions", "userindex_", mock.Anything, mock.Anything).Return(true, nil).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.NoError(t, err)
@@ -417,30 +390,19 @@ func TestStoreUserInIndex(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockAPI.ExpectedCalls = nil
+			mockAPI, store, _, _, _ := GetMockSetup(t)
 			tt.setup(mockAPI)
-			user := &User{
-				MattermostUserID:      MockMMUserID,
-				MattermostUsername:    "mockMMUsername",
-				MattermostDisplayName: "mockDisplayName",
-				Remote: &remote.User{
-					ID:   "mockRemoteID",
-					Mail: "mock@remote.com",
-				},
-			}
 
+			user := GetMockUser()
 			err := store.StoreUserInIndex(user)
 
 			tt.assertions(t, err)
-
 			mockAPI.AssertExpectations(t)
 		})
 	}
 }
 
 func TestDeleteUserFromIndex(t *testing.T) {
-	mockAPI, store, _, _, _ := GetMockSetup(t)
-
 	tests := []struct {
 		name       string
 		setup      func(*testutil.MockPluginAPI)
@@ -449,7 +411,7 @@ func TestDeleteUserFromIndex(t *testing.T) {
 		{
 			name: "Error loading user index",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return(nil, &model.AppError{Message: "KVGet failed"}).Times(1)
+				mockAPI.On("KVGet", "userindex_").Return(nil, &model.AppError{Message: "KVGet failed"}).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.EqualError(t, err, "modification error: failed plugin KVGet: KVGet failed")
@@ -458,7 +420,7 @@ func TestDeleteUserFromIndex(t *testing.T) {
 		{
 			name: "Error unmarshalling existing user index",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(`invalid json`), nil).Times(1)
+				mockAPI.On("KVGet", "userindex_").Return([]byte(`invalid json`), nil).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.EqualError(t, err, "modification error: invalid character 'i' looking for beginning of value")
@@ -467,7 +429,7 @@ func TestDeleteUserFromIndex(t *testing.T) {
 		{
 			name: "User not found in index",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(`[]`), nil).Times(1)
+				mockAPI.On("KVGet", "userindex_").Return([]byte(`[]`), nil).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.NoError(t, err)
@@ -476,9 +438,9 @@ func TestDeleteUserFromIndex(t *testing.T) {
 		{
 			name: "Successfully delete a user from index",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).
+				mockAPI.On("KVGet", "userindex_").
 					Return([]byte(`[{"MattermostUserID":"mockMMUserID","RemoteID":"mockRemoteID"},{"MattermostUserID":"otherUserID","RemoteID":"otherRemoteID"}]`), nil).Times(1)
-				mockAPI.On("KVSetWithOptions", mock.AnythingOfType("string"), mock.Anything, mock.Anything).Return(true, nil).Times(1)
+				mockAPI.On("KVSetWithOptions", "userindex_", mock.Anything, mock.Anything).Return(true, nil).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.NoError(t, err)
@@ -487,8 +449,8 @@ func TestDeleteUserFromIndex(t *testing.T) {
 		{
 			name: "Error storing updated user index",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(MockUserJSON), nil).Times(1)
-				mockAPI.On("KVSetWithOptions", mock.AnythingOfType("string"), mock.Anything, mock.Anything).Return(false, &model.AppError{Message: "KVSet failed"}).Times(1)
+				mockAPI.On("KVGet", "userindex_").Return([]byte(MockUserJSON), nil).Times(1)
+				mockAPI.On("KVSetWithOptions", "userindex_", mock.Anything, mock.Anything).Return(false, &model.AppError{Message: "KVSet failed"}).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.ErrorContains(t, err, "problem writing value", "KVSet failed")
@@ -497,21 +459,18 @@ func TestDeleteUserFromIndex(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockAPI.ExpectedCalls = nil
+			mockAPI, store, _, _, _ := GetMockSetup(t)
 			tt.setup(mockAPI)
 
 			err := store.DeleteUserFromIndex(MockMMUserID)
 
 			tt.assertions(t, err)
-
 			mockAPI.AssertExpectations(t)
 		})
 	}
 }
 
 func TestSearchInUserIndex(t *testing.T) {
-	mockAPI, store, _, _, _ := GetMockSetup(t)
-
 	tests := []struct {
 		name       string
 		setup      func(*testutil.MockPluginAPI)
@@ -522,7 +481,7 @@ func TestSearchInUserIndex(t *testing.T) {
 		{
 			name: "Error loading user index",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return(nil, &model.AppError{Message: "KVGet failed"}).Times(1)
+				mockAPI.On("KVGet", "userindex_").Return(nil, &model.AppError{Message: "KVGet failed"}).Times(1)
 			},
 			term:  "searchTerm",
 			limit: 5,
@@ -534,7 +493,7 @@ func TestSearchInUserIndex(t *testing.T) {
 		{
 			name: "No matches found",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(`[]`), nil).Times(1)
+				mockAPI.On("KVGet", "userindex_").Return([]byte(`[]`), nil).Times(1)
 			},
 			term:  "searchTerm",
 			limit: 5,
@@ -546,7 +505,7 @@ func TestSearchInUserIndex(t *testing.T) {
 		{
 			name: "Matches found within limit",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(GetRemoteUserJSON(2)), nil).Times(1)
+				mockAPI.On("KVGet", "userindex_").Return([]byte(GetRemoteUserJSON(2)), nil).Times(1)
 			},
 			term:  "user",
 			limit: 1,
@@ -559,7 +518,7 @@ func TestSearchInUserIndex(t *testing.T) {
 		{
 			name: "Matches not found within limit despite existing matches",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(GetRemoteUserJSON(3)), nil).Times(1)
+				mockAPI.On("KVGet", "userindex_").Return([]byte(GetRemoteUserJSON(3)), nil).Times(1)
 			},
 			term:  "nonexistent",
 			limit: 2,
@@ -571,7 +530,7 @@ func TestSearchInUserIndex(t *testing.T) {
 		{
 			name: "Limit exceeded but only returns available matches",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(GetRemoteUserJSON(3)), nil).Times(1)
+				mockAPI.On("KVGet", "userindex_").Return([]byte(GetRemoteUserJSON(3)), nil).Times(1)
 			},
 			term:  "user",
 			limit: 2,
@@ -585,35 +544,30 @@ func TestSearchInUserIndex(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockAPI.ExpectedCalls = nil
+			mockAPI, store, _, _, _ := GetMockSetup(t)
 			tt.setup(mockAPI)
 
 			result, err := store.SearchInUserIndex(tt.term, tt.limit)
 
 			tt.assertions(t, result, err)
-
 			mockAPI.AssertExpectations(t)
 		})
 	}
 }
 
 func TestStoreUserActiveEvents(t *testing.T) {
-	mockAPI, store, _, _, _ := GetMockSetup(t)
-
 	tests := []struct {
-		name             string
-		setup            func(*testutil.MockPluginAPI)
-		mattermostUserID string
-		events           []string
-		assertions       func(*testing.T, error)
+		name       string
+		setup      func(*testutil.MockPluginAPI)
+		events     []string
+		assertions func(*testing.T, error)
 	}{
 		{
 			name: "Error loading user",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return(nil, &model.AppError{Message: "User not found"}).Times(1)
+				mockAPI.On("KVGet", "user_c3b5020d58a049787bc969768465b890").Return(nil, &model.AppError{Message: "User not found"}).Times(1)
 			},
-			mattermostUserID: "mockUserID",
-			events:           []string{"event1", "event2"},
+			events: []string{"event1", "event2"},
 			assertions: func(t *testing.T, err error) {
 				require.EqualError(t, err, "failed plugin KVGet: User not found")
 			},
@@ -621,11 +575,10 @@ func TestStoreUserActiveEvents(t *testing.T) {
 		{
 			name: "Error storing active events",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(MockUserDetailsWithEventJSON), nil).Times(1)
-				mockAPI.On("KVSet", mock.AnythingOfType("string"), mock.Anything).Return(&model.AppError{Message: "Failed to store events"}).Times(1)
+				mockAPI.On("KVGet", "user_c3b5020d58a049787bc969768465b890").Return([]byte(MockUserDetailsWithEventJSON), nil).Times(1)
+				mockAPI.On("KVSet", "user_c3b5020d58a049787bc969768465b890", mock.Anything).Return(&model.AppError{Message: "Failed to store events"}).Times(1)
 			},
-			mattermostUserID: "mockUserID",
-			events:           []string{"event1", "event2"},
+			events: []string{"event1", "event2"},
 			assertions: func(t *testing.T, err error) {
 				require.ErrorContains(t, err, "Failed to store events")
 			},
@@ -633,11 +586,10 @@ func TestStoreUserActiveEvents(t *testing.T) {
 		{
 			name: "Store active events successfully",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(MockUserDetailsWithEventJSON), nil).Times(1)
-				mockAPI.On("KVSet", mock.AnythingOfType("string"), mock.Anything).Return(nil).Times(1)
+				mockAPI.On("KVGet", "user_c3b5020d58a049787bc969768465b890").Return([]byte(MockUserDetailsWithEventJSON), nil).Times(1)
+				mockAPI.On("KVSet", "user_c3b5020d58a049787bc969768465b890", mock.Anything).Return(nil).Times(1)
 			},
-			mattermostUserID: "mockUserID",
-			events:           []string{"event1", "event2"},
+			events: []string{"event1", "event2"},
 			assertions: func(t *testing.T, err error) {
 				require.NoError(t, err)
 			},
@@ -645,37 +597,32 @@ func TestStoreUserActiveEvents(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockAPI.ExpectedCalls = nil
+			mockAPI, store, _, _, _ := GetMockSetup(t)
 			tt.setup(mockAPI)
 
-			err := store.StoreUserActiveEvents(tt.mattermostUserID, tt.events)
+			err := store.StoreUserActiveEvents(MockMMUserID, tt.events)
 
 			tt.assertions(t, err)
-
 			mockAPI.AssertExpectations(t)
 		})
 	}
 }
 
 func TestStoreUserLinkedEvent(t *testing.T) {
-	mockAPI, store, _, _, _ := GetMockSetup(t)
-
 	tests := []struct {
-		name             string
-		setup            func(*testutil.MockPluginAPI)
-		mattermostUserID string
-		eventID          string
-		channelID        string
-		assertions       func(*testing.T, error)
+		name       string
+		setup      func(*testutil.MockPluginAPI)
+		eventID    string
+		channelID  string
+		assertions func(*testing.T, error)
 	}{
 		{
 			name: "Error loading user",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return(nil, &model.AppError{Message: "User not found"}).Times(1)
+				mockAPI.On("KVGet", "user_c3b5020d58a049787bc969768465b890").Return(nil, &model.AppError{Message: "User not found"}).Times(1)
 			},
-			mattermostUserID: "mockUserID",
-			eventID:          "mockEventID",
-			channelID:        "mockChannelID",
+			eventID:   MockEventID,
+			channelID: MockChannelID,
 			assertions: func(t *testing.T, err error) {
 				require.EqualError(t, err, "failed plugin KVGet: User not found")
 			},
@@ -683,12 +630,11 @@ func TestStoreUserLinkedEvent(t *testing.T) {
 		{
 			name: "Error storing linked event",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(`{"mm_id":"mockUserID","channel_events": {}}`), nil).Times(1)
-				mockAPI.On("KVSet", mock.AnythingOfType("string"), mock.Anything).Return(&model.AppError{Message: "Failed to store linked event"}).Times(1)
+				mockAPI.On("KVGet", "user_c3b5020d58a049787bc969768465b890").Return([]byte(`{"mm_id":"mockUserID","channel_events": {}}`), nil).Times(1)
+				mockAPI.On("KVSet", "user_c3b5020d58a049787bc969768465b890", mock.Anything).Return(&model.AppError{Message: "Failed to store linked event"}).Times(1)
 			},
-			mattermostUserID: "mockUserID",
-			eventID:          "mockEventID",
-			channelID:        "mockChannelID",
+			eventID:   MockEventID,
+			channelID: MockChannelID,
 			assertions: func(t *testing.T, err error) {
 				require.ErrorContains(t, err, "Failed to store linked event")
 			},
@@ -696,12 +642,11 @@ func TestStoreUserLinkedEvent(t *testing.T) {
 		{
 			name: "Store linked event successfully with empty ChannelEvents",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(`{"mm_id":"mockUserID","channel_events": {}}`), nil).Times(1)
-				mockAPI.On("KVSet", mock.AnythingOfType("string"), mock.Anything).Return(nil).Times(1)
+				mockAPI.On("KVGet", "user_c3b5020d58a049787bc969768465b890").Return([]byte(`{"mm_id":"mockUserID","channel_events": {}}`), nil).Times(1)
+				mockAPI.On("KVSet", "user_c3b5020d58a049787bc969768465b890", mock.Anything).Return(nil).Times(1)
 			},
-			mattermostUserID: "mockUserID",
-			eventID:          "mockEventID",
-			channelID:        "mockChannelID",
+			eventID:   MockEventID,
+			channelID: MockChannelID,
 			assertions: func(t *testing.T, err error) {
 				require.NoError(t, err)
 			},
@@ -709,12 +654,11 @@ func TestStoreUserLinkedEvent(t *testing.T) {
 		{
 			name: "Store linked event successfully with existing ChannelEvents",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(`{"mm_id":"mockUserID","channel_events": {"mockEventID": "mockChannelID"}}`), nil).Times(1)
-				mockAPI.On("KVSet", mock.AnythingOfType("string"), mock.Anything).Return(nil).Times(1)
+				mockAPI.On("KVGet", "user_c3b5020d58a049787bc969768465b890").Return([]byte(`{"mm_id":"mockUserID","channel_events": {"mockEventID": "mockChannelID"}}`), nil).Times(1)
+				mockAPI.On("KVSet", "user_c3b5020d58a049787bc969768465b890", mock.Anything).Return(nil).Times(1)
 			},
-			mattermostUserID: "mockUserID",
-			eventID:          "event2",
-			channelID:        "channel2",
+			eventID:   "mockEventID2",
+			channelID: "mockChannelID2",
 			assertions: func(t *testing.T, err error) {
 				require.NoError(t, err)
 			},
@@ -722,35 +666,28 @@ func TestStoreUserLinkedEvent(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockAPI.ExpectedCalls = nil
+			mockAPI, store, _, _, _ := GetMockSetup(t)
 			tt.setup(mockAPI)
 
-			err := store.StoreUserLinkedEvent(tt.mattermostUserID, tt.eventID, tt.channelID)
+			err := store.StoreUserLinkedEvent(MockMMUserID, tt.eventID, tt.channelID)
 
 			tt.assertions(t, err)
-
 			mockAPI.AssertExpectations(t)
 		})
 	}
 }
 
 func TestStoreUserCustomStatusUpdates(t *testing.T) {
-	mockAPI, store, _, _, _ := GetMockSetup(t)
-
 	tests := []struct {
-		name             string
-		setup            func(*testutil.MockPluginAPI)
-		mattermostUserID string
-		value            bool
-		assertions       func(*testing.T, error)
+		name       string
+		setup      func(*testutil.MockPluginAPI)
+		assertions func(*testing.T, error)
 	}{
 		{
 			name: "Error loading user",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return(nil, &model.AppError{Message: "User not found"}).Times(1)
+				mockAPI.On("KVGet", "user_c3b5020d58a049787bc969768465b890").Return(nil, &model.AppError{Message: "User not found"}).Times(1)
 			},
-			mattermostUserID: "mockUserID",
-			value:            true,
 			assertions: func(t *testing.T, err error) {
 				require.EqualError(t, err, "failed plugin KVGet: User not found")
 			},
@@ -758,11 +695,9 @@ func TestStoreUserCustomStatusUpdates(t *testing.T) {
 		{
 			name: "Error storing custom status update",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(`{"mm_id":"mockUserID","is_custom_status_set": false}`), nil).Times(1)
-				mockAPI.On("KVSet", mock.AnythingOfType("string"), mock.Anything).Return(&model.AppError{Message: "Failed to store custom status"}).Times(1)
+				mockAPI.On("KVGet", "user_c3b5020d58a049787bc969768465b890").Return([]byte(`{"mm_id":"mockMMUserID","is_custom_status_set": false}`), nil).Times(1)
+				mockAPI.On("KVSet", "user_c3b5020d58a049787bc969768465b890", mock.Anything).Return(&model.AppError{Message: "Failed to store custom status"}).Times(1)
 			},
-			mattermostUserID: "mockUserID",
-			value:            true,
 			assertions: func(t *testing.T, err error) {
 				require.ErrorContains(t, err, "Failed to store custom status")
 			},
@@ -770,11 +705,9 @@ func TestStoreUserCustomStatusUpdates(t *testing.T) {
 		{
 			name: "Store custom status update successfully",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(`{"mm_id":"mockUserID","is_custom_status_set": false}`), nil).Times(1)
-				mockAPI.On("KVSet", mock.AnythingOfType("string"), mock.Anything).Return(nil).Times(1)
+				mockAPI.On("KVGet", "user_c3b5020d58a049787bc969768465b890").Return([]byte(`{"mm_id":"mockMMUserID","is_custom_status_set": false}`), nil).Times(1)
+				mockAPI.On("KVSet", "user_c3b5020d58a049787bc969768465b890", mock.Anything).Return(nil).Times(1)
 			},
-			mattermostUserID: "mockUserID",
-			value:            true,
 			assertions: func(t *testing.T, err error) {
 				require.NoError(t, err)
 			},
@@ -782,13 +715,12 @@ func TestStoreUserCustomStatusUpdates(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockAPI.ExpectedCalls = nil
+			mockAPI, store, _, _, _ := GetMockSetup(t)
 			tt.setup(mockAPI)
 
-			err := store.StoreUserCustomStatusUpdates(tt.mattermostUserID, tt.value)
+			err := store.StoreUserCustomStatusUpdates(MockMMUserID, true)
 
 			tt.assertions(t, err)
-
 			mockAPI.AssertExpectations(t)
 		})
 	}

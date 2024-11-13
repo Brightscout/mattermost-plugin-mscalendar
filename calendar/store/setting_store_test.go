@@ -52,7 +52,7 @@ func TestSetSetting(t *testing.T) {
 			value:     "available",
 			setup: func(mockAPI *testutil.MockPluginAPI, mockTracker *mock_tracker.MockTracker) {
 				mockAPI.On("KVGet", "user_ed8ba8dcdc37081824b09b84f8e061e6").Return(mockUserJSON, nil).Times(1)
-				mockAPI.On("KVSet", "mmuid_0404eb7ac36366cbc447d63a3acd7a5d", mock.Anything).Return(nil).Times(1)
+				mockAPI.On("KVSet", "mmuid_e138a0f218087f9324d8c77f87d5f3a0", mock.Anything).Return(nil).Times(1)
 				mockAPI.On("KVSet", "user_c3b5020d58a049787bc969768465b890", mock.Anything).Return(nil).Times(1)
 				mockTracker.EXPECT().TrackAutomaticStatusUpdate(MockUserID, "available", "settings").Times(1)
 			},
@@ -77,7 +77,7 @@ func TestSetSetting(t *testing.T) {
 			value:     true,
 			setup: func(mockAPI *testutil.MockPluginAPI, mockTracker *mock_tracker.MockTracker) {
 				mockAPI.On("KVGet", "user_ed8ba8dcdc37081824b09b84f8e061e6").Return(mockUserJSON, nil).Times(1)
-				mockAPI.On("KVSet", "mmuid_0404eb7ac36366cbc447d63a3acd7a5d", mock.Anything).Return(nil).Times(1)
+				mockAPI.On("KVSet", "mmuid_e138a0f218087f9324d8c77f87d5f3a0", mock.Anything).Return(nil).Times(1)
 				mockAPI.On("KVSet", "user_c3b5020d58a049787bc969768465b890", mock.Anything).Return(nil).Times(1)
 				mockTracker.EXPECT().TrackAutomaticStatusUpdate(MockUserID, "available", "settings").Times(1)
 			},
@@ -103,7 +103,7 @@ func TestSetSetting(t *testing.T) {
 			setup: func(mockAPI *testutil.MockPluginAPI, mockTracker *mock_tracker.MockTracker) {
 				mockAPI.On("KVGet", "user_ed8ba8dcdc37081824b09b84f8e061e6").Return(mockUserJSON, nil).Times(1)
 				mockAPI.On("KVSet", "user_c3b5020d58a049787bc969768465b890", mock.Anything).Return(nil).Times(1)
-				mockAPI.On("KVSet", "mmuid_0404eb7ac36366cbc447d63a3acd7a5d", mock.Anything).Return(nil).Times(1)
+				mockAPI.On("KVSet", "mmuid_e138a0f218087f9324d8c77f87d5f3a0", mock.Anything).Return(nil).Times(1)
 				mockTracker.EXPECT().TrackAutomaticStatusUpdate(MockUserID, "available", "settings").Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
@@ -128,7 +128,7 @@ func TestSetSetting(t *testing.T) {
 			setup: func(mockAPI *testutil.MockPluginAPI, mockTracker *mock_tracker.MockTracker) {
 				mockAPI.On("KVGet", "user_ed8ba8dcdc37081824b09b84f8e061e6").Return(mockUserJSON, nil).Times(1)
 				mockAPI.On("KVSet", "user_c3b5020d58a049787bc969768465b890", mock.Anything).Return(nil).Times(1)
-				mockAPI.On("KVSet", "mmuid_0404eb7ac36366cbc447d63a3acd7a5d", mock.Anything).Return(nil).Times(1)
+				mockAPI.On("KVSet", "mmuid_e138a0f218087f9324d8c77f87d5f3a0", mock.Anything).Return(nil).Times(1)
 				mockTracker.EXPECT().TrackAutomaticStatusUpdate(MockUserID, "available", "settings").Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
@@ -142,7 +142,7 @@ func TestSetSetting(t *testing.T) {
 			setup: func(mockAPI *testutil.MockPluginAPI, mockTracker *mock_tracker.MockTracker) {
 				mockAPI.On("KVGet", "user_ed8ba8dcdc37081824b09b84f8e061e6").Return(mockUserJSON, nil).Times(1)
 				mockAPI.On("KVSet", "user_c3b5020d58a049787bc969768465b890", mock.Anything).Return(nil).Times(1)
-				mockAPI.On("KVSet", "mmuid_0404eb7ac36366cbc447d63a3acd7a5d", mock.Anything).Return(nil).Times(1)
+				mockAPI.On("KVSet", "mmuid_e138a0f218087f9324d8c77f87d5f3a0", mock.Anything).Return(nil).Times(1)
 				mockTracker.EXPECT().TrackAutomaticStatusUpdate(MockUserID, "available", "settings").Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
