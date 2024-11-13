@@ -22,7 +22,7 @@ func TestLoadSubscription(t *testing.T) {
 		{
 			name: "Error loading subscription",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.Anything).Return(nil, &model.AppError{Message: "Subscription not found"}).Times(1)
+				mockAPI.On("KVGet", "sub_0c47c5b7e2a88ec9256c8ac0e71b0f6e").Return(nil, &model.AppError{Message: "Subscription not found"}).Times(1)
 			},
 			assertions: func(t *testing.T, sub *Subscription, err error) {
 				require.Error(t, err)
@@ -33,13 +33,13 @@ func TestLoadSubscription(t *testing.T) {
 		{
 			name: "Successful Load",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.Anything).Return([]byte(`{"PluginVersion":"1.0","Remote":{"ID":"mockRemoteID","CreatorID":"mockCreatorID"}}`), nil).Times(1)
+				mockAPI.On("KVGet", "sub_0c47c5b7e2a88ec9256c8ac0e71b0f6e").Return([]byte(`{"PluginVersion":"1.0","Remote":{"ID":"mockRemoteUserID","CreatorID":"mockCreatorID"}}`), nil).Times(1)
 			},
 			assertions: func(t *testing.T, sub *Subscription, err error) {
 				require.NoError(t, err)
 				require.NotNil(t, sub)
 				require.Equal(t, "1.0", sub.PluginVersion)
-				require.Equal(t, MockRemoteID, sub.Remote.ID)
+				require.Equal(t, MockRemoteUserID, sub.Remote.ID)
 				require.Equal(t, MockCreatorID, sub.Remote.CreatorID)
 			},
 		},
@@ -52,7 +52,6 @@ func TestLoadSubscription(t *testing.T) {
 			sub, err := store.LoadSubscription(MockSubscriptionID)
 
 			tt.assertions(t, sub, err)
-
 			mockAPI.AssertExpectations(t)
 		})
 	}
@@ -72,14 +71,14 @@ func TestStoreUserSubscription(t *testing.T) {
 			setup: func(_ *testutil.MockPluginAPI, _ *mock_bot.MockLogger, _ *mock_bot.MockLogger) {},
 			assertions: func(t *testing.T, err error) {
 				require.Error(t, err)
-				require.EqualError(t, err, `user "mockRemoteUserID" does not match the subscription creator "mockCreatorID"`)
+				require.EqualError(t, err, `user "mockRemoteID" does not match the subscription creator "mockCreatorID"`)
 			},
 		},
 		{
 			name: "Error storing subscription",
 			setup: func(mockAPI *testutil.MockPluginAPI, _ *mock_bot.MockLogger, _ *mock_bot.MockLogger) {
 				mockSubscription.Remote.CreatorID = mockUser.Remote.ID
-				mockAPI.On("KVSet", mock.AnythingOfType("string"), mock.Anything).Return(&model.AppError{Message: "Failed to store subscription"}).Times(1)
+				mockAPI.On("KVSet", "sub_0c47c5b7e2a88ec9256c8ac0e71b0f6e", mock.Anything).Return(&model.AppError{Message: "Failed to store subscription"}).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.Error(t, err)
@@ -90,8 +89,8 @@ func TestStoreUserSubscription(t *testing.T) {
 			name: "Error storing user settings",
 			setup: func(mockAPI *testutil.MockPluginAPI, _ *mock_bot.MockLogger, _ *mock_bot.MockLogger) {
 				mockAPI.ExpectedCalls = nil
-				mockAPI.On("KVSet", mock.AnythingOfType("string"), mock.Anything).Return(nil).Times(1)
-				mockAPI.On("KVSet", mock.AnythingOfType("string"), mock.Anything).Return(&model.AppError{Message: "Failed to store user settings"}).Times(1)
+				mockAPI.On("KVSet", "sub_0c47c5b7e2a88ec9256c8ac0e71b0f6e", mock.Anything).Return(nil).Times(1)
+				mockAPI.On("KVSet", "user_c3b5020d58a049787bc969768465b890", mock.Anything).Return(&model.AppError{Message: "Failed to store user settings"}).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.Error(t, err)
@@ -102,7 +101,8 @@ func TestStoreUserSubscription(t *testing.T) {
 			name: "Successful Store",
 			setup: func(mockAPI *testutil.MockPluginAPI, mockLogger *mock_bot.MockLogger, mockLoggerWith *mock_bot.MockLogger) {
 				mockAPI.ExpectedCalls = nil
-				mockAPI.On("KVSet", mock.AnythingOfType("string"), mock.Anything).Return(nil).Times(2)
+				mockAPI.On("KVSet", "sub_0c47c5b7e2a88ec9256c8ac0e71b0f6e", mock.Anything).Return(nil).Times(1)
+				mockAPI.On("KVSet", "user_c3b5020d58a049787bc969768465b890", mock.Anything).Return(nil).Times(1)
 				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith).Times(1)
 				mockLoggerWith.EXPECT().Debugf("store: stored mattermost user subscription.").Times(1)
 			},
@@ -119,15 +119,12 @@ func TestStoreUserSubscription(t *testing.T) {
 			err := store.StoreUserSubscription(mockUser, mockSubscription)
 
 			tt.assertions(t, err)
-
 			mockAPI.AssertExpectations(t)
 		})
 	}
 }
 
 func TestDeleteUserSubscription(t *testing.T) {
-	mockUser := GetMockUser()
-
 	tests := []struct {
 		name       string
 		setup      func(*testutil.MockPluginAPI, *mock_bot.MockLogger, *mock_bot.MockLogger)
@@ -136,7 +133,7 @@ func TestDeleteUserSubscription(t *testing.T) {
 		{
 			name: "Error deleting subscription",
 			setup: func(mockAPI *testutil.MockPluginAPI, _ *mock_bot.MockLogger, _ *mock_bot.MockLogger) {
-				mockAPI.On("KVDelete", mock.AnythingOfType("string")).Return(&model.AppError{Message: "Failed to delete subscription"}).Times(1)
+				mockAPI.On("KVDelete", "sub_0c47c5b7e2a88ec9256c8ac0e71b0f6e").Return(&model.AppError{Message: "Failed to delete subscription"}).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.Error(t, err)
@@ -147,8 +144,8 @@ func TestDeleteUserSubscription(t *testing.T) {
 			name: "Error updating user settings",
 			setup: func(mockAPI *testutil.MockPluginAPI, _ *mock_bot.MockLogger, _ *mock_bot.MockLogger) {
 				mockAPI.ExpectedCalls = nil
-				mockAPI.On("KVDelete", mock.AnythingOfType("string")).Return(nil).Times(1)
-				mockAPI.On("KVSet", mock.AnythingOfType("string"), mock.Anything).Return(&model.AppError{Message: "Failed to update user settings"}).Times(1)
+				mockAPI.On("KVDelete", "sub_0c47c5b7e2a88ec9256c8ac0e71b0f6e").Return(nil).Times(1)
+				mockAPI.On("KVSet", "user_c3b5020d58a049787bc969768465b890", mock.Anything).Return(&model.AppError{Message: "Failed to update user settings"}).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.Error(t, err)
@@ -159,8 +156,9 @@ func TestDeleteUserSubscription(t *testing.T) {
 			name: "Successful Delete",
 			setup: func(mockAPI *testutil.MockPluginAPI, mockLogger *mock_bot.MockLogger, mockLoggerWith *mock_bot.MockLogger) {
 				mockAPI.ExpectedCalls = nil
-				mockAPI.On("KVDelete", mock.AnythingOfType("string")).Return(nil).Times(1)
-				mockAPI.On("KVSet", mock.AnythingOfType("string"), mock.Anything).Return(nil).Times(2)
+				mockAPI.On("KVDelete", "sub_0c47c5b7e2a88ec9256c8ac0e71b0f6e").Return(nil).Times(1)
+				mockAPI.On("KVSet", "user_c3b5020d58a049787bc969768465b890", mock.Anything).Return(nil).Times(1)
+				mockAPI.On("KVSet", "mmuid_e138a0f218087f9324d8c77f87d5f3a0", mock.Anything).Return(nil).Times(1)
 				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith).Times(1)
 				mockLoggerWith.EXPECT().Debugf("store: deleted mattermost user subscription.").Times(1)
 			},
@@ -174,10 +172,10 @@ func TestDeleteUserSubscription(t *testing.T) {
 			mockAPI, store, mockLogger, mockLoggerWith, _ := GetMockSetup(t)
 			tt.setup(mockAPI, mockLogger, mockLoggerWith)
 
+			mockUser := GetMockUser()
 			err := store.DeleteUserSubscription(mockUser, MockSubscriptionID)
 
 			tt.assertions(t, err)
-
 			mockAPI.AssertExpectations(t)
 		})
 	}
