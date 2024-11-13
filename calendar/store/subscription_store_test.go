@@ -33,13 +33,13 @@ func TestLoadSubscription(t *testing.T) {
 		{
 			name: "Successful Load",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", mock.Anything).Return([]byte(`{"PluginVersion":"1.0","Remote":{"ID":"mockRemoteID","CreatorID":"mockCreatorID"}}`), nil).Times(1)
+				mockAPI.On("KVGet", mock.Anything).Return([]byte(`{"PluginVersion":"1.0","Remote":{"ID":"mockRemoteUserID","CreatorID":"mockCreatorID"}}`), nil).Times(1)
 			},
 			assertions: func(t *testing.T, sub *Subscription, err error) {
 				require.NoError(t, err)
 				require.NotNil(t, sub)
 				require.Equal(t, "1.0", sub.PluginVersion)
-				require.Equal(t, MockRemoteID, sub.Remote.ID)
+				require.Equal(t, MockRemoteUserID, sub.Remote.ID)
 				require.Equal(t, MockCreatorID, sub.Remote.CreatorID)
 			},
 		},
@@ -72,7 +72,7 @@ func TestStoreUserSubscription(t *testing.T) {
 			setup: func(_ *testutil.MockPluginAPI, _ *mock_bot.MockLogger, _ *mock_bot.MockLogger) {},
 			assertions: func(t *testing.T, err error) {
 				require.Error(t, err)
-				require.EqualError(t, err, `user "mockRemoteUserID" does not match the subscription creator "mockCreatorID"`)
+				require.EqualError(t, err, `user "mockRemoteID" does not match the subscription creator "mockCreatorID"`)
 			},
 		},
 		{
