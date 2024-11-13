@@ -9,17 +9,12 @@ import (
 
 	"github.com/mattermost/mattermost/server/public/model"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/testutil"
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/tracker/mock_tracker"
 )
 
 func TestSetSetting(t *testing.T) {
-	mockAPI, store, _, _, mockTracker := GetMockSetup(t)
-	mockUser := User{
-		MattermostUserID: "mockMattermostUserID",
-		Remote: &remote.User{
-			ID: "mockRemoteUserID",
-		},
-	}
+	mockUser := GetMockUser()
 	mockUserJSON, err := json.Marshal(mockUser)
 	require.NoError(t, err)
 
@@ -27,15 +22,14 @@ func TestSetSetting(t *testing.T) {
 		name       string
 		settingID  string
 		value      interface{}
-		setup      func()
+		setup      func(*testutil.MockPluginAPI, *mock_tracker.MockTracker)
 		assertions func(*testing.T, error)
 	}{
 		{
 			name:      "Error loading user",
-			settingID: "mockSettingID",
-			setup: func() {
-				mockAPI.ExpectedCalls = nil
-				mockAPI.On("KVGet", mock.Anything).Return(nil, &model.AppError{Message: "Error loading user"}).Times(1)
+			settingID: MockSettingID,
+			setup: func(mockAPI *testutil.MockPluginAPI, _ *mock_tracker.MockTracker) {
+				mockAPI.On("KVGet", "user_ed8ba8dcdc37081824b09b84f8e061e6").Return(nil, &model.AppError{Message: "Error loading user"}).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.EqualError(t, err, "failed plugin KVGet: Error loading user")
@@ -45,9 +39,8 @@ func TestSetSetting(t *testing.T) {
 			name:      "error setting UpdateStatusFromOptionsSetting",
 			settingID: UpdateStatusFromOptionsSettingID,
 			value:     1,
-			setup: func() {
-				mockAPI.ExpectedCalls = nil
-				mockAPI.On("KVGet", mock.Anything).Return(mockUserJSON, nil).Times(1)
+			setup: func(mockAPI *testutil.MockPluginAPI, _ *mock_tracker.MockTracker) {
+				mockAPI.On("KVGet", "user_ed8ba8dcdc37081824b09b84f8e061e6").Return(mockUserJSON, nil).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.EqualError(t, err, "cannot read value 1 for setting update_status_from_options (expecting string)")
@@ -57,11 +50,11 @@ func TestSetSetting(t *testing.T) {
 			name:      "Set UpdateStatusFromOptionsSetting",
 			settingID: UpdateStatusFromOptionsSettingID,
 			value:     "available",
-			setup: func() {
-				mockAPI.ExpectedCalls = nil
-				mockAPI.On("KVGet", mock.Anything).Return(mockUserJSON, nil).Times(1)
-				mockAPI.On("KVSet", mock.AnythingOfType("string"), mock.Anything).Return(nil).Times(2)
-				mockTracker.EXPECT().TrackAutomaticStatusUpdate("mockUserID", "available", "settings").Times(1)
+			setup: func(mockAPI *testutil.MockPluginAPI, mockTracker *mock_tracker.MockTracker) {
+				mockAPI.On("KVGet", "user_ed8ba8dcdc37081824b09b84f8e061e6").Return(mockUserJSON, nil).Times(1)
+				mockAPI.On("KVSet", "mmuid_0404eb7ac36366cbc447d63a3acd7a5d", mock.Anything).Return(nil).Times(1)
+				mockAPI.On("KVSet", "user_c3b5020d58a049787bc969768465b890", mock.Anything).Return(nil).Times(1)
+				mockTracker.EXPECT().TrackAutomaticStatusUpdate(MockUserID, "available", "settings").Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.NoError(t, err)
@@ -71,9 +64,8 @@ func TestSetSetting(t *testing.T) {
 			name:      "error setting GetConfirmationSettingID",
 			settingID: GetConfirmationSettingID,
 			value:     1,
-			setup: func() {
-				mockAPI.ExpectedCalls = nil
-				mockAPI.On("KVGet", mock.Anything).Return(mockUserJSON, nil).Times(1)
+			setup: func(mockAPI *testutil.MockPluginAPI, _ *mock_tracker.MockTracker) {
+				mockAPI.On("KVGet", "user_ed8ba8dcdc37081824b09b84f8e061e6").Return(mockUserJSON, nil).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.EqualError(t, err, "cannot read value 1 for setting get_confirmation (expecting bool)")
@@ -83,11 +75,11 @@ func TestSetSetting(t *testing.T) {
 			name:      "Set GetConfirmationSettingID",
 			settingID: GetConfirmationSettingID,
 			value:     true,
-			setup: func() {
-				mockAPI.ExpectedCalls = nil
-				mockAPI.On("KVGet", mock.Anything).Return(mockUserJSON, nil).Times(1)
-				mockAPI.On("KVSet", mock.AnythingOfType("string"), mock.Anything).Return(nil).Times(2)
-				mockTracker.EXPECT().TrackAutomaticStatusUpdate("mockUserID", "available", "settings").Times(1)
+			setup: func(mockAPI *testutil.MockPluginAPI, mockTracker *mock_tracker.MockTracker) {
+				mockAPI.On("KVGet", "user_ed8ba8dcdc37081824b09b84f8e061e6").Return(mockUserJSON, nil).Times(1)
+				mockAPI.On("KVSet", "mmuid_0404eb7ac36366cbc447d63a3acd7a5d", mock.Anything).Return(nil).Times(1)
+				mockAPI.On("KVSet", "user_c3b5020d58a049787bc969768465b890", mock.Anything).Return(nil).Times(1)
+				mockTracker.EXPECT().TrackAutomaticStatusUpdate(MockUserID, "available", "settings").Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.NoError(t, err)
@@ -97,9 +89,8 @@ func TestSetSetting(t *testing.T) {
 			name:      "error setting SetCustomStatusSettingID",
 			settingID: SetCustomStatusSettingID,
 			value:     1,
-			setup: func() {
-				mockAPI.ExpectedCalls = nil
-				mockAPI.On("KVGet", mock.Anything).Return(mockUserJSON, nil).Times(1)
+			setup: func(mockAPI *testutil.MockPluginAPI, _ *mock_tracker.MockTracker) {
+				mockAPI.On("KVGet", "user_ed8ba8dcdc37081824b09b84f8e061e6").Return(mockUserJSON, nil).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.EqualError(t, err, "cannot read value 1 for setting set_custom_status (expecting bool)")
@@ -109,11 +100,11 @@ func TestSetSetting(t *testing.T) {
 			name:      "Set SetCustomStatusSettingID",
 			settingID: SetCustomStatusSettingID,
 			value:     true,
-			setup: func() {
-				mockAPI.ExpectedCalls = nil
-				mockAPI.On("KVGet", mock.Anything).Return(mockUserJSON, nil).Times(1)
-				mockAPI.On("KVSet", mock.AnythingOfType("string"), mock.Anything).Return(nil).Times(2)
-				mockTracker.EXPECT().TrackAutomaticStatusUpdate("mockUserID", "available", "settings").Times(1)
+			setup: func(mockAPI *testutil.MockPluginAPI, mockTracker *mock_tracker.MockTracker) {
+				mockAPI.On("KVGet", "user_ed8ba8dcdc37081824b09b84f8e061e6").Return(mockUserJSON, nil).Times(1)
+				mockAPI.On("KVSet", "user_c3b5020d58a049787bc969768465b890", mock.Anything).Return(nil).Times(1)
+				mockAPI.On("KVSet", "mmuid_0404eb7ac36366cbc447d63a3acd7a5d", mock.Anything).Return(nil).Times(1)
+				mockTracker.EXPECT().TrackAutomaticStatusUpdate(MockUserID, "available", "settings").Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.NoError(t, err)
@@ -123,9 +114,8 @@ func TestSetSetting(t *testing.T) {
 			name:      "error setting ReceiveRemindersSettingID",
 			settingID: ReceiveRemindersSettingID,
 			value:     1,
-			setup: func() {
-				mockAPI.ExpectedCalls = nil
-				mockAPI.On("KVGet", mock.Anything).Return(mockUserJSON, nil).Times(1)
+			setup: func(mockAPI *testutil.MockPluginAPI, _ *mock_tracker.MockTracker) {
+				mockAPI.On("KVGet", "user_ed8ba8dcdc37081824b09b84f8e061e6").Return(mockUserJSON, nil).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.EqualError(t, err, "cannot read value 1 for setting get_reminders (expecting bool)")
@@ -135,11 +125,11 @@ func TestSetSetting(t *testing.T) {
 			name:      "Set ReceiveRemindersSettingID",
 			settingID: ReceiveRemindersSettingID,
 			value:     true,
-			setup: func() {
-				mockAPI.ExpectedCalls = nil
-				mockAPI.On("KVGet", mock.Anything).Return(mockUserJSON, nil).Times(1)
-				mockAPI.On("KVSet", mock.AnythingOfType("string"), mock.Anything).Return(nil).Times(2)
-				mockTracker.EXPECT().TrackAutomaticStatusUpdate("mockUserID", "available", "settings").Times(1)
+			setup: func(mockAPI *testutil.MockPluginAPI, mockTracker *mock_tracker.MockTracker) {
+				mockAPI.On("KVGet", "user_ed8ba8dcdc37081824b09b84f8e061e6").Return(mockUserJSON, nil).Times(1)
+				mockAPI.On("KVSet", "user_c3b5020d58a049787bc969768465b890", mock.Anything).Return(nil).Times(1)
+				mockAPI.On("KVSet", "mmuid_0404eb7ac36366cbc447d63a3acd7a5d", mock.Anything).Return(nil).Times(1)
+				mockTracker.EXPECT().TrackAutomaticStatusUpdate(MockUserID, "available", "settings").Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.NoError(t, err)
@@ -148,12 +138,12 @@ func TestSetSetting(t *testing.T) {
 		{
 			name:      "Set DailySummarySettingID",
 			settingID: DailySummarySettingID,
-			value:     "mockDailySummarySetting",
-			setup: func() {
-				mockAPI.ExpectedCalls = nil
-				mockAPI.On("KVGet", mock.Anything).Return(mockUserJSON, nil).Times(1)
-				mockAPI.On("KVSet", mock.AnythingOfType("string"), mock.Anything).Return(nil).Times(2)
-				mockTracker.EXPECT().TrackAutomaticStatusUpdate("mockUserID", "available", "settings").Times(1)
+			value:     MockDailySummarySetting,
+			setup: func(mockAPI *testutil.MockPluginAPI, mockTracker *mock_tracker.MockTracker) {
+				mockAPI.On("KVGet", "user_ed8ba8dcdc37081824b09b84f8e061e6").Return(mockUserJSON, nil).Times(1)
+				mockAPI.On("KVSet", "user_c3b5020d58a049787bc969768465b890", mock.Anything).Return(nil).Times(1)
+				mockAPI.On("KVSet", "mmuid_0404eb7ac36366cbc447d63a3acd7a5d", mock.Anything).Return(nil).Times(1)
+				mockTracker.EXPECT().TrackAutomaticStatusUpdate(MockUserID, "available", "settings").Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.NoError(t, err)
@@ -162,10 +152,9 @@ func TestSetSetting(t *testing.T) {
 		{
 			name:      "invalid setting ID",
 			settingID: "invalidSettingID",
-			value:     "mockDailySummarySetting",
-			setup: func() {
-				mockAPI.ExpectedCalls = nil
-				mockAPI.On("KVGet", mock.Anything).Return(mockUserJSON, nil).Times(1)
+			value:     MockDailySummarySetting,
+			setup: func(mockAPI *testutil.MockPluginAPI, _ *mock_tracker.MockTracker) {
+				mockAPI.On("KVGet", "user_ed8ba8dcdc37081824b09b84f8e061e6").Return(mockUserJSON, nil).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.EqualError(t, err, "setting invalidSettingID not found")
@@ -175,11 +164,10 @@ func TestSetSetting(t *testing.T) {
 			name:      "Error storing updated user",
 			settingID: UpdateStatusFromOptionsSettingID,
 			value:     "available",
-			setup: func() {
-				mockAPI.ExpectedCalls = nil
-				mockAPI.On("KVGet", mock.Anything).Return(mockUserJSON, nil).Times(1)
-				mockAPI.On("KVSet", mock.AnythingOfType("string"), mock.Anything).Return(&model.AppError{Message: "Error storing user"}).Times(1)
-				mockTracker.EXPECT().TrackAutomaticStatusUpdate("mockUserID", "available", "settings").Times(1)
+			setup: func(mockAPI *testutil.MockPluginAPI, mockTracker *mock_tracker.MockTracker) {
+				mockAPI.On("KVGet", "user_ed8ba8dcdc37081824b09b84f8e061e6").Return(mockUserJSON, nil).Times(1)
+				mockAPI.On("KVSet", "user_c3b5020d58a049787bc969768465b890", mock.Anything).Return(&model.AppError{Message: "Error storing user"}).Times(1)
+				mockTracker.EXPECT().TrackAutomaticStatusUpdate(MockUserID, "available", "settings").Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.ErrorContains(t, err, "Error storing user")
@@ -188,9 +176,10 @@ func TestSetSetting(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.setup()
+			mockAPI, store, _, _, mockTracker := GetMockSetup(t)
+			tt.setup(mockAPI, mockTracker)
 
-			err := store.SetSetting("mockUserID", tt.settingID, tt.value)
+			err := store.SetSetting(MockUserID, tt.settingID, tt.value)
 
 			tt.assertions(t, err)
 
@@ -200,36 +189,21 @@ func TestSetSetting(t *testing.T) {
 }
 
 func TestGetSetting(t *testing.T) {
-	mockAPI, store, _, _, _ := GetMockSetup(t)
-	mockUser := User{
-		Settings: Settings{
-			DailySummary: &DailySummaryUserSettings{
-				PostTime: "10:00AM",
-			},
-			EventSubscriptionID:               "mockEventSubscriptionID",
-			UpdateStatusFromOptions:           "available",
-			GetConfirmation:                   true,
-			ReceiveReminders:                  true,
-			SetCustomStatus:                   false,
-			UpdateStatus:                      false,
-			ReceiveNotificationsDuringMeeting: true,
-		},
-	}
-	mockUserJSON, err := json.Marshal(mockUser)
+	mockUser := GetMockUserWithSettings()
+	mockUserJSON, err := json.Marshal(*mockUser)
 	require.NoError(t, err)
 
 	tests := []struct {
 		name       string
 		settingID  string
-		setup      func()
+		setup      func(*testutil.MockPluginAPI)
 		assertions func(*testing.T, interface{}, error)
 	}{
 		{
 			name:      "Error loading settings",
-			settingID: "mockSettingID",
-			setup: func() {
-				mockAPI.ExpectedCalls = nil
-				mockAPI.On("KVGet", mock.Anything).Return(nil, &model.AppError{Message: "Error loading settings"}).Times(1)
+			settingID: MockSettingID,
+			setup: func(mockAPI *testutil.MockPluginAPI) {
+				mockAPI.On("KVGet", "user_ed8ba8dcdc37081824b09b84f8e061e6").Return(nil, &model.AppError{Message: "Error loading settings"}).Times(1)
 			},
 			assertions: func(t *testing.T, setting interface{}, err error) {
 				require.Error(t, err)
@@ -240,9 +214,8 @@ func TestGetSetting(t *testing.T) {
 		{
 			name:      "Get UpdateStatusFromOptionsSetting",
 			settingID: UpdateStatusFromOptionsSettingID,
-			setup: func() {
-				mockAPI.ExpectedCalls = nil
-				mockAPI.On("KVGet", mock.Anything).Return(mockUserJSON, nil).Times(1)
+			setup: func(mockAPI *testutil.MockPluginAPI) {
+				mockAPI.On("KVGet", "user_ed8ba8dcdc37081824b09b84f8e061e6").Return(mockUserJSON, nil).Times(1)
 			},
 			assertions: func(t *testing.T, setting interface{}, err error) {
 				require.NoError(t, err)
@@ -252,9 +225,8 @@ func TestGetSetting(t *testing.T) {
 		{
 			name:      "Get GetConfirmationSetting",
 			settingID: GetConfirmationSettingID,
-			setup: func() {
-				mockAPI.ExpectedCalls = nil
-				mockAPI.On("KVGet", mock.Anything).Return(mockUserJSON, nil).Times(1)
+			setup: func(mockAPI *testutil.MockPluginAPI) {
+				mockAPI.On("KVGet", "user_ed8ba8dcdc37081824b09b84f8e061e6").Return(mockUserJSON, nil).Times(1)
 			},
 			assertions: func(t *testing.T, setting interface{}, err error) {
 				require.NoError(t, err)
@@ -264,9 +236,8 @@ func TestGetSetting(t *testing.T) {
 		{
 			name:      "Get SetCustomStatusSetting",
 			settingID: SetCustomStatusSettingID,
-			setup: func() {
-				mockAPI.ExpectedCalls = nil
-				mockAPI.On("KVGet", mock.Anything).Return(mockUserJSON, nil).Times(1)
+			setup: func(mockAPI *testutil.MockPluginAPI) {
+				mockAPI.On("KVGet", "user_ed8ba8dcdc37081824b09b84f8e061e6").Return(mockUserJSON, nil).Times(1)
 			},
 			assertions: func(t *testing.T, setting interface{}, err error) {
 				require.NoError(t, err)
@@ -276,9 +247,8 @@ func TestGetSetting(t *testing.T) {
 		{
 			name:      "Get ReceiveRemindersSetting",
 			settingID: ReceiveRemindersSettingID,
-			setup: func() {
-				mockAPI.ExpectedCalls = nil
-				mockAPI.On("KVGet", mock.Anything).Return(mockUserJSON, nil).Times(1)
+			setup: func(mockAPI *testutil.MockPluginAPI) {
+				mockAPI.On("KVGet", "user_ed8ba8dcdc37081824b09b84f8e061e6").Return(mockUserJSON, nil).Times(1)
 			},
 			assertions: func(t *testing.T, setting interface{}, err error) {
 				require.NoError(t, err)
@@ -288,9 +258,8 @@ func TestGetSetting(t *testing.T) {
 		{
 			name:      "Get DailySummary",
 			settingID: DailySummarySettingID,
-			setup: func() {
-				mockAPI.ExpectedCalls = nil
-				mockAPI.On("KVGet", mock.Anything).Return(mockUserJSON, nil).Times(1)
+			setup: func(mockAPI *testutil.MockPluginAPI) {
+				mockAPI.On("KVGet", "user_ed8ba8dcdc37081824b09b84f8e061e6").Return(mockUserJSON, nil).Times(1)
 			},
 			assertions: func(t *testing.T, setting interface{}, err error) {
 				require.NoError(t, err)
@@ -300,9 +269,8 @@ func TestGetSetting(t *testing.T) {
 		{
 			name:      "invalid settingID",
 			settingID: "invalidSettingID",
-			setup: func() {
-				mockAPI.ExpectedCalls = nil
-				mockAPI.On("KVGet", mock.Anything).Return(mockUserJSON, nil).Times(1)
+			setup: func(mockAPI *testutil.MockPluginAPI) {
+				mockAPI.On("KVGet", "user_ed8ba8dcdc37081824b09b84f8e061e6").Return(mockUserJSON, nil).Times(1)
 			},
 			assertions: func(t *testing.T, setting interface{}, err error) {
 				require.EqualError(t, err, "setting invalidSettingID not found")
@@ -311,9 +279,10 @@ func TestGetSetting(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.setup()
+			mockAPI, store, _, _, _ := GetMockSetup(t)
+			tt.setup(mockAPI)
 
-			setting, err := store.GetSetting("mockUserID", tt.settingID)
+			setting, err := store.GetSetting(MockUserID, tt.settingID)
 
 			tt.assertions(t, setting, err)
 
@@ -331,17 +300,15 @@ func TestDefaultDailySummaryUserSettings(t *testing.T) {
 }
 
 func TestSetPanelPostID(t *testing.T) {
-	mockAPI, store, _, _, _ := GetMockSetup(t)
-
 	tests := []struct {
 		name       string
-		setup      func()
+		setup      func(*testutil.MockPluginAPI)
 		assertions func(*testing.T, error)
 	}{
 		{
 			name: "Error storing panel postID",
-			setup: func() {
-				mockAPI.On("KVSet", mock.AnythingOfType("string"), mock.Anything).Return(&model.AppError{Message: "Failed to store panel postID"}).Times(1)
+			setup: func(mockAPI *testutil.MockPluginAPI) {
+				mockAPI.On("KVSet", "settings_panel_ed8ba8dcdc37081824b09b84f8e061e6", mock.Anything).Return(&model.AppError{Message: "Failed to store panel postID"}).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.Error(t, err)
@@ -350,9 +317,8 @@ func TestSetPanelPostID(t *testing.T) {
 		},
 		{
 			name: "Successful Stored panel postID",
-			setup: func() {
-				mockAPI.ExpectedCalls = nil
-				mockAPI.On("KVSet", mock.AnythingOfType("string"), mock.Anything).Return(nil).Times(1)
+			setup: func(mockAPI *testutil.MockPluginAPI) {
+				mockAPI.On("KVSet", "settings_panel_ed8ba8dcdc37081824b09b84f8e061e6", mock.Anything).Return(nil).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.NoError(t, err)
@@ -361,29 +327,27 @@ func TestSetPanelPostID(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.setup()
+			mockAPI, store, _, _, _ := GetMockSetup(t)
+			tt.setup(mockAPI)
 
-			err := store.SetPanelPostID("mockUserID", "mockPostID")
+			err := store.SetPanelPostID(MockUserID, MockPostID)
 
 			tt.assertions(t, err)
-
 			mockAPI.AssertExpectations(t)
 		})
 	}
 }
 
 func TestGetPanelPostID(t *testing.T) {
-	mockAPI, store, _, _, _ := GetMockSetup(t)
-
 	tests := []struct {
 		name       string
-		setup      func()
+		setup      func(*testutil.MockPluginAPI)
 		assertions func(*testing.T, string, error)
 	}{
 		{
 			name: "Error loading panel postID",
-			setup: func() {
-				mockAPI.On("KVGet", mock.Anything).Return(nil, &model.AppError{Message: "Error loading panel postID"}).Times(1)
+			setup: func(mockAPI *testutil.MockPluginAPI) {
+				mockAPI.On("KVGet", "settings_panel_0c47c5b7e2a88ec9256c8ac0e71b0f6e").Return(nil, &model.AppError{Message: "Error loading panel postID"}).Times(1)
 			},
 			assertions: func(t *testing.T, panelPostID string, err error) {
 				require.Error(t, err)
@@ -393,40 +357,38 @@ func TestGetPanelPostID(t *testing.T) {
 		},
 		{
 			name: "Success loading panel postID",
-			setup: func() {
-				mockAPI.On("KVGet", mock.Anything).Return([]byte("mockPostID"), nil).Times(1)
+			setup: func(mockAPI *testutil.MockPluginAPI) {
+				mockAPI.On("KVGet", "settings_panel_0c47c5b7e2a88ec9256c8ac0e71b0f6e").Return([]byte(MockPostID), nil).Times(1)
 			},
 			assertions: func(t *testing.T, panelPostID string, err error) {
 				require.NoError(t, err)
-				require.Equal(t, "mockPostID", panelPostID)
+				require.Equal(t, MockPostID, panelPostID)
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.setup()
+			mockAPI, store, _, _, _ := GetMockSetup(t)
+			tt.setup(mockAPI)
 
-			panelPostID, err := store.GetPanelPostID("mockSubscriptionID")
+			panelPostID, err := store.GetPanelPostID(MockSubscriptionID)
 
 			tt.assertions(t, panelPostID, err)
-
 			mockAPI.AssertExpectations(t)
 		})
 	}
 }
 
 func TestDeletePanelPostID(t *testing.T) {
-	mockAPI, store, _, _, _ := GetMockSetup(t)
-
 	tests := []struct {
 		name       string
-		setup      func()
+		setup      func(*testutil.MockPluginAPI)
 		assertions func(*testing.T, error)
 	}{
 		{
 			name: "Error deleting panel post id",
-			setup: func() {
-				mockAPI.On("KVDelete", mock.AnythingOfType("string")).Return(&model.AppError{Message: "Failed to delete panel post id"}).Times(1)
+			setup: func(mockAPI *testutil.MockPluginAPI) {
+				mockAPI.On("KVDelete", "settings_panel_ed8ba8dcdc37081824b09b84f8e061e6").Return(&model.AppError{Message: "Failed to delete panel post id"}).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.Error(t, err)
@@ -435,9 +397,8 @@ func TestDeletePanelPostID(t *testing.T) {
 		},
 		{
 			name: "Successful Delete panel post id",
-			setup: func() {
-				mockAPI.ExpectedCalls = nil
-				mockAPI.On("KVDelete", mock.AnythingOfType("string")).Return(nil).Times(1)
+			setup: func(mockAPI *testutil.MockPluginAPI) {
+				mockAPI.On("KVDelete", "settings_panel_ed8ba8dcdc37081824b09b84f8e061e6").Return(nil).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.NoError(t, err)
@@ -446,12 +407,12 @@ func TestDeletePanelPostID(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.setup()
+			mockAPI, store, _, _, _ := GetMockSetup(t)
+			tt.setup(mockAPI)
 
-			err := store.DeletePanelPostID("mockUserID")
+			err := store.DeletePanelPostID(MockUserID)
 
 			tt.assertions(t, err)
-
 			mockAPI.AssertExpectations(t)
 		})
 	}
