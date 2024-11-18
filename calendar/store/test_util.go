@@ -47,12 +47,12 @@ func GetMockSetup(t *testing.T) (*testutil.MockPluginAPI, Store, *mock_bot.MockL
 
 func GetMockUser() *User {
 	return &User{
-		MattermostUserID:   MockMMUserID,
-		MattermostUsername: MockMMUsername,
+		MattermostUserID:      MockMMUserID,
+		MattermostUsername:    MockMMUsername,
+		MattermostDisplayName: MockMMDisplayName,
 		Settings: Settings{
 			EventSubscriptionID: MockEventSubscriptionID,
 		},
-		MattermostDisplayName: MockMMDisplayName,
 		Remote: &remote.User{
 			ID:   MockRemoteID,
 			Mail: MockRemoteMail,
