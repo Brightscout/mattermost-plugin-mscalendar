@@ -27,6 +27,7 @@ const (
 	MockRemoteUserID             = "mockRemoteUserID"
 	MockRemoteMail               = "mock@remote.com"
 	MockEventID                  = "mockEventID"
+	MockICalUID                  = "mockICalUID"
 	MockChannelID                = "mockChannelID"
 	MockUserIndexJSON            = `[{"mm_id": "mockMMUserID"}]`
 	InvalidMockUserIndexJSON     = `[{"mm_id": "invalidMockMMUserID"}]`
@@ -51,12 +52,12 @@ func GetMockSetup(t *testing.T) (*testutil.MockPluginAPI, Store, *mock_bot.MockL
 
 func GetMockUser() *User {
 	return &User{
-		MattermostUserID:   MockMMUserID,
-		MattermostUsername: MockMMUsername,
+		MattermostUserID:      MockMMUserID,
+		MattermostUsername:    MockMMUsername,
+		MattermostDisplayName: MockMMDisplayName,
 		Settings: Settings{
 			EventSubscriptionID: MockEventSubscriptionID,
 		},
-		MattermostDisplayName: MockMMDisplayName,
 		Remote: &remote.User{
 			ID:   MockRemoteID,
 			Mail: MockRemoteMail,
@@ -124,8 +125,8 @@ func GetRemoteUserJSON(noOfUsers int) string {
 func GetMockEvent() *Event {
 	return &Event{
 		Remote: &remote.Event{
-			ICalUID: "mockICalUID",
-			ID:      "mockEventID",
+			ICalUID: MockICalUID,
+			ID:      MockEventID,
 		},
 	}
 }
